@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>My Matches - Smart Lost &amp; Found</title>
+    <link rel="stylesheet" href="css/style.css">
+  </head>
+  <body>
+    <main class="wrap page-shell">
+      <header class="page-header">
+        <p class="eyebrow">Smart matching</p>
+        <h1>Possible matches</h1>
+        <p class="page-intro">
+          We compare your reports with approved reports from other users. Review
+          the item details and send a claim if you recognize a match.
+        </p>
+      </header>
+
+      <section class="match-info box">
+        <div>
+          <h2>How matching works</h2>
+          <p>
+            Each suggestion is scored using category, colour, description,
+            location and date. Scores of 40% or higher are shown here.
+          </p>
+        </div>
+        <a class="btn ghost" href="my-reports.html">View my reports</a>
+      </section>
+
+      <div class="match-summary" id="summary"></div>
+      <section class="match-list" id="list" aria-live="polite"></section>
+    </main>
+
+    <script src="js/app.js"></script>
+    <script>
+      layout('matches.html');
+      const user = need();
+      const suggestions = matchesFor(user.email);
+      const matchScore = (score) =>
+        score >= 75 ? 'Strong match' : score >= 55 ? 'Good match' : 'Possible match';
+
+      $('#summary').innerHTML = `
+        <div class="stat"><b>${suggestions.length}</b>Possible matches</div>
+        <div class="stat"><b>40%</b>Minimum score</div>
+      `;
+
+      $('#list').innerHTML =
+        suggestions
+          .map(
+            ({ mine, other, s }) => `
+              <article class="match-result">
+                <div class="match-result-header">
+                  <span class="match-label">${matchScore(s)}</span>
+                  <span class="match-date">Reported ${esc(other.date)}</span>
+                </div>
+                <div class="match">
+                  <div class="match-item">
+                    <p class="eyebrow">Your report</p>
+                    ${itemCard(mine, false)}
+                  </div>
+                  <div class="score" aria-label="${s} percent match">
+                    ${s}%<small>match score</small>
+                  </div>
+                  <div class="match-item">
+                    <p class="eyebrow">Approved report</p>
+                    ${itemCard(other, false)}
+                  </div>
+                </div>
+                <div class="match-result-footer">
+                  <p class="field-hint">
+                    Compare the item details. If you believe this is yours,
+                    contact the reporter through a claim request.
+                  </p>
+                  <button class="btn tag" onclick="openClaim('${other.id}')">
+                    Send claim request
+                  </button>
+                </div>
+              </article>
+            `,
+          )
+          .join('') ||
+        `<div class="empty-state">
+          <div class="empty-icon" aria-hidden="true">⌕</div>
+          <h2>No possible matches yet</h2>
+          <p>
+            Once a report is approved, we’ll compare it with other reports and
+            show relevant suggestions here.
+          </p>
+          <a class="btn tag" href="report.html">Report an item</a>
+        </div>`;
+    </script>
+  </body>
+</html>

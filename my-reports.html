@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>My Reports - Smart Lost &amp; Found</title>
+    <link rel="stylesheet" href="css/style.css">
+  </head>
+  <body>
+    <main class="wrap page-shell">
+      <header class="page-header page-header-row">
+        <div>
+          <p class="eyebrow">Your activity</p>
+          <h1>My reports</h1>
+          <p class="page-intro">
+            Track report verification and follow claim requests from one place.
+          </p>
+        </div>
+        <a class="btn tag" href="report.html">＋ New report</a>
+      </header>
+
+      <section class="report-overview" id="overview" aria-label="Report summary"></section>
+
+      <section class="reports-section">
+        <div class="section-heading">
+          <div>
+            <h2>Your item reports</h2>
+            <p class="section-description">
+              Pending reports are visible to you and are awaiting admin review.
+            </p>
+          </div>
+        </div>
+        <div class="grid" id="mine"></div>
+      </section>
+
+      <section class="claims-section">
+        <div class="section-heading">
+          <div>
+            <h2>Claim requests</h2>
+            <p class="section-description">
+              Check the latest status of each request you’ve submitted.
+            </p>
+          </div>
+        </div>
+        <div class="tbl-wrap box">
+          <table class="tbl">
+            <thead>
+              <tr>
+                <th>Item</th>
+                <th>Request date</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody id="cl"></tbody>
+          </table>
+        </div>
+      </section>
+    </main>
+
+    <script src="js/app.js"></script>
+    <script>
+      layout('my-reports.html');
+      const user = need();
+
+      function draw() {
+        const items = DB.get('items', []);
+        const mine = items.filter((item) => item.owner === user.email);
+        const counts = {
+          total: mine.length,
+          pending: mine.filter((item) => item.status === 'pending').length,
+          approved: mine.filter((item) => item.status === 'approved').length,
+          returned: mine.filter((item) => item.status === 'returned').length,
+        };
+
+        $('#overview').innerHTML = `
+          <div class="stat"><b>${counts.total}</b>Total reports</div>
+          <div class="stat"><b>${counts.pending}</b>Awaiting review</div>
+          <div class="stat"><b>${counts.approved}</b>Approved</div>
+          <div class="stat"><b>${counts.returned}</b>Returned</div>
+        `;
+
+        $('#mine').innerHTML =
+          mine
+            .slice()
+            .reverse()
+            .map(
+              (item) => `
+                <article class="report-card">
+                  ${itemCard(item, false)}
+                  <div class="report-card-footer">
+                    <span class="badge s-${item.status}">${esc(item.status)}</span>
+                    ${
+                      item.status === 'pending'
+                        ? `<button class="btn sm red" onclick="del('${item.id}')">Delete report</button>`
+                        : ''
+                    }
+                  </div>
+                </article>
+              `,
+            )
+            .join('') ||
+          `<div class="empty-state">
+            <h3>You haven’t submitted a report yet</h3>
+            <p>Create a lost or found report to start tracking it here.</p>
+            <a class="btn tag" href="report.html">Create a report</a>
+          </div>`;
+
+        const claims = DB.get('claims', []).filter((claim) => claim.by === user.email);
+        $('#cl').innerHTML =
+          claims
+            .slice()
+            .reverse()
+            .map((claim) => {
+              const item = items.find((candidate) => candidate.id === claim.itemId);
+              return `
+                <tr>
+                  <td>${item ? esc(item.title) : 'Item no longer available'}</td>
+                  <td>${esc(claim.date)}</td>
+                  <td><span class="badge s-${claim.status}">${esc(claim.status)}</span></td>
+                </tr>
+              `;
+            })
+            .join('') ||
+          '<tr><td colspan="3" class="empty-cell">No claim requests yet.</td></tr>';
+      }
+
+      function del(id) {
+        const item = DB.get('items', []).find((candidate) => candidate.id === id);
+        if (!item || item.owner !== user.email || item.status !== 'pending') {
+          toast('Only your pending reports can be deleted.');
+          return;
+        }
+        DB.set(
+          'items',
+          DB.get('items', []).filter((candidate) => candidate.id !== id),
+        );
+        draw();
+        toast('Report deleted.');
+      }
+
+      draw();
+    </script>
+  </body>
+</html>

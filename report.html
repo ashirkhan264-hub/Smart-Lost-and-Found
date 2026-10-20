@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Report an Item - Smart Lost &amp; Found</title>
+    <link rel="stylesheet" href="css/style.css">
+  </head>
+  <body>
+    <main class="wrap page-shell narrow-page">
+      <header class="page-header">
+        <p class="eyebrow">Lost something or found an item?</p>
+        <h1>Submit a report</h1>
+        <p class="page-intro">
+          Add a few clear details so other students can find it and our matching
+          system can identify possible matches.
+        </p>
+      </header>
+
+      <form class="box report-form" onsubmit="return save(event)">
+        <fieldset class="report-type">
+          <legend>What would you like to report?</legend>
+          <div class="seg">
+            <label>
+              <input type="radio" name="type" value="lost" checked>
+              <span>I lost something</span>
+            </label>
+            <label>
+              <input type="radio" name="type" value="found">
+              <span>I found something</span>
+            </label>
+          </div>
+        </fieldset>
+
+        <div class="field-group">
+          <label for="title">Item name</label>
+          <input
+            id="title"
+            required
+            maxlength="80"
+            placeholder="e.g. Black Samsung phone"
+          >
+        </div>
+
+        <div class="field-grid">
+          <div class="field-group">
+            <label for="cat">Category</label>
+            <select id="cat" required></select>
+          </div>
+          <div class="field-group">
+            <label for="color">Colour</label>
+            <input id="color" required maxlength="40" placeholder="e.g. Black">
+          </div>
+          <div class="field-group">
+            <label for="loc">Campus location</label>
+            <select id="loc" required></select>
+          </div>
+          <div class="field-group">
+            <label for="date">Date lost or found</label>
+            <input id="date" type="date" required>
+          </div>
+        </div>
+
+        <div class="field-group">
+          <label for="desc">Description</label>
+          <textarea
+            id="desc"
+            rows="4"
+            required
+            maxlength="500"
+            placeholder="Add identifying details such as brand, marks, contents or other unique features."
+          ></textarea>
+          <p class="field-hint">
+            Specific details help improve the relevance of potential matches.
+          </p>
+        </div>
+
+        <div class="field-group">
+          <label for="img">Photo <span class="optional-label">Optional</span></label>
+          <input id="img" type="file" accept="image/*">
+          <p class="field-hint">A clear photo can help people recognize the item.</p>
+          <img id="prev" alt="Selected item photo preview" class="photo-preview">
+        </div>
+
+        <div class="form-footer">
+          <p class="field-hint">
+            Reports are submitted as pending and appear after admin verification.
+          </p>
+          <button class="btn tag">Submit report</button>
+        </div>
+      </form>
+    </main>
+
+    <script src="js/app.js"></script>
+    <script>
+      layout('report.html');
+      const u = need();
+
+      $('#cat').innerHTML = opts(CATS);
+      $('#loc').innerHTML = opts(LOCS);
+      $('#date').value = day();
+      $('#date').max = day();
+      let data = '';
+
+      $('#img').onchange = (e) => {
+        const file = e.target.files[0];
+        if (!file) {
+          data = '';
+          $('#prev').removeAttribute('src');
+          $('#prev').hidden = true;
+          return;
+        }
+
+        const reader = new FileReader();
+        reader.onload = () => {
+          const image = new Image();
+          image.onload = () => {
+            const scale = Math.min(1, 500 / image.width);
+            const canvas = document.createElement('canvas');
+            canvas.width = image.width * scale;
+            canvas.height = image.height * scale;
+            canvas.getContext('2d').drawImage(
+              image,
+              0,
+              0,
+              canvas.width,
+              canvas.height,
+            );
+            data = canvas.toDataURL('image/jpeg', 0.7);
+            $('#prev').src = data;
+            $('#prev').hidden = false;
+          };
+          image.onerror = () => toast('Could not read that image. Please choose another.');
+          image.src = reader.result;
+        };
+        reader.onerror = () => toast('Could not read that image. Please try again.');
+        reader.readAsDataURL(file);
+      };
+
+      function save(e) {
+        e.preventDefault();
+        const items = DB.get('items', []);
+        items.push({
+          id: uid(),
+          type: $('input[name=type]:checked').value,
+          title: $('#title').value.trim(),
+          category: $('#cat').value,
+          color: $('#color').value.trim(),
+          location: $('#loc').value,
+          date: $('#date').value,
+          desc: $('#desc').value.trim(),
+          img: data,
+          owner: u.email,
+          status: 'pending',
+        });
+
+        try {
+          DB.set('items', items);
+        } catch (error) {
+          return toast('Image too large to save. Please choose a smaller photo.'), false;
+        }
+
+        location.href = 'my-reports.html';
+        return false;
+      }
+    </script>
+  </body>
+</html>

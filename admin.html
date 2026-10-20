@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Admin - Smart Lost &amp; Found</title>
+    <link rel="stylesheet" href="css/style.css">
+  </head>
+  <body>
+    <main class="wrap">
+      <h1 style="font-size: 2rem">Admin dashboard</h1>
+      <div class="tabs" id="tabs"></div>
+      <div id="view"></div>
+    </main>
+
+    <script src="js/app.js"></script>
+    <script>
+      layout('admin.html');
+      need('admin');
+      let T = 'stats';
+
+      const TABS = [
+        ['stats', 'Statistics'],
+        ['reports', 'Reports'],
+        ['claims', 'Claims'],
+        ['users', 'Users'],
+      ];
+      const I = () => DB.get('items', []);
+      const C = () => DB.get('claims', []);
+      const U = () => DB.get('users', []);
+
+      function setI(id, p) {
+        DB.set('items', I().map((i) => (i.id === id ? { ...i, ...p } : i)));
+        draw();
+      }
+
+      function setC(id, st) {
+        const c = C().find((x) => x.id === id);
+        DB.set(
+          'claims',
+          C().map((x) => (x.id === id ? { ...x, status: st } : x)),
+        );
+        if (st === 'approved') {
+          DB.set(
+            'items',
+            I().map((i) =>
+              i.id === c.itemId ? { ...i, status: 'returned' } : i,
+            ),
+          );
+        }
+        draw();
+        toast('Claim ' + st);
+      }
+
+      function delU(e) {
+        DB.set(
+          'users',
+          U().filter((u) => u.email !== e),
+        );
+        draw();
+      }
+
+      function blk(e) {
+        DB.set(
+          'users',
+          U().map((u) =>
+            u.email === e ? { ...u, blocked: !u.blocked } : u,
+          ),
+        );
+        draw();
+      }
+
+      function draw() {
+        $('#tabs').innerHTML = TABS.map(
+          (t) =>
+            `<button class="btn ${T === t[0] ? '' : 'ghost'}" onclick="T='${t[0]}';draw()">${t[1]}</button>`,
+        ).join('');
+
+        const it = I();
+        const v = $('#view');
+
+        if (T === 'stats') {
+          const l = it.filter((i) => i.type === 'lost').length;
+          const f = it.filter((i) => i.type === 'found').length;
+          const r = it.filter((i) => i.status === 'returned').length;
+          const p = it.filter((i) => i.status === 'pending').length;
+          const t = it.length || 1;
+          const mx = Math.max(
+            1,
+            ...CATS.map((c) => it.filter((i) => i.category === c).length),
+          );
+
+          v.innerHTML = `<div class="stats">${[
+            ['Total reports', it.length],
+            ['Pending verification', p],
+            ['Returned', r],
+            ['Open claims', C().filter((c) => c.status === 'pending').length],
+          ]
+            .map((s) => `<div class="stat"><b>${s[1]}</b>${s[0]}</div>`)
+            .join('')}</div>
+            <div class="cols">
+              <div class="box">
+                <h3>Reports by category</h3>
+                ${CATS.map((c) => {
+                  const n = it.filter((i) => i.category === c).length;
+                  return `<div>${c} (${n})<div class="bar" style="width:${(n / mx) * 100}%"></div></div>`;
+                }).join('')}
+              </div>
+              <div class="box">
+                <h3>Lost vs found</h3>
+                <div class="donut" style="background:conic-gradient(var(--lost) 0 ${(l / t) * 100}%,var(--found) ${(l / t) * 100}% 100%)"></div>
+                <p class="meta" style="text-align: center">Lost ${l} (red) | Found ${f} (teal)</p>
+              </div>
+            </div>`;
+        }
+
+        if (T === 'reports') {
+          v.innerHTML = `<div class="tbl-wrap">
+            <table class="tbl">
+              <thead>
+                <tr><th>Item</th><th>Type</th><th>By</th><th>Status</th><th>Actions</th></tr>
+              </thead>
+              <tbody>${it
+                .map(
+                  (i) => `<tr>
+                    <td>${esc(i.title)}<br><span class="meta">${i.location}, ${i.date}</span></td>
+                    <td><span class="badge b-${i.type}">${i.type}</span></td>
+                    <td>${esc(i.owner)}</td>
+                    <td><span class="badge s-${i.status}">${i.status}</span></td>
+                    <td>
+                      ${i.status === 'pending' ? `<button class="btn sm tag" onclick="setI('${i.id}',{status:'approved'})">Approve</button> <button class="btn sm ghost" onclick="setI('${i.id}',{status:'rejected'})">Reject</button> ` : ''}
+                      ${i.status === 'approved' ? `<button class="btn sm" onclick="setI('${i.id}',{status:'returned'})">Mark returned</button> ` : ''}
+                      <button class="btn sm red" onclick="DB.set('items',I().filter(x=>x.id!=='${i.id}'));draw()">Delete</button>
+                    </td>
+                  </tr>`,
+                )
+                .join('')}</tbody>
+            </table>
+          </div>`;
+        }
+
+        if (T === 'claims') {
+          v.innerHTML = `<div class="tbl-wrap">
+            <table class="tbl">
+              <thead>
+                <tr><th>Item</th><th>Claimed by</th><th>Proof</th><th>Status</th><th>Actions</th></tr>
+              </thead>
+              <tbody>${C()
+                .map((c) => {
+                  const i = it.find((x) => x.id === c.itemId) || {
+                    title: '(removed)',
+                  };
+                  return `<tr>
+                    <td>${esc(i.title)}</td>
+                    <td>${esc(c.by)}</td>
+                    <td>${esc(c.msg)}</td>
+                    <td><span class="badge s-${c.status}">${c.status}</span></td>
+                    <td>${c.status === 'pending' ? `<button class="btn sm tag" onclick="setC('${c.id}','approved')">Approve</button> <button class="btn sm ghost" onclick="setC('${c.id}','rejected')">Reject</button>` : ''}</td>
+                  </tr>`;
+                })
+                .join('') || '<tr><td colspan="5" class="empty">No claim requests yet.</td></tr>'}</tbody>
+            </table>
+          </div>`;
+        }
+
+        if (T === 'users') {
+          v.innerHTML = `<div class="tbl-wrap">
+            <table class="tbl">
+              <thead>
+                <tr><th>Name</th><th>Email</th><th>Role</th><th>Actions</th></tr>
+              </thead>
+              <tbody>${U()
+                .map(
+                  (u) => `<tr>
+                    <td>${esc(u.name)}</td>
+                    <td>${esc(u.email)}</td>
+                    <td>${u.role}${u.blocked ? ' (blocked)' : ''}</td>
+                    <td>${u.role === 'admin' ? '' : `<button class="btn sm ghost" onclick="blk('${u.email}')">${u.blocked ? 'Unblock' : 'Block'}</button> <button class="btn sm red" onclick="delU('${u.email}')">Remove</button>`}</td>
+                  </tr>`,
+                )
+                .join('')}</tbody>
+            </table>
+          </div>`;
+        }
+      }
+
+      draw();
+    </script>
+  </body>
+</html>

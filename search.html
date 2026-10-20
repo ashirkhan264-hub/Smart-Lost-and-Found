@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Search - Smart Lost &amp; Found</title>
+    <link rel="stylesheet" href="css/style.css">
+  </head>
+  <body>
+    <main class="wrap page-shell">
+      <header class="page-header">
+        <p class="eyebrow">Find matching items</p>
+        <h1>Search items</h1>
+      </header>
+
+      <section class="box filters-box">
+        <div class="filters">
+          <div class="field-group">
+            <label for="q">Keyword</label>
+            <input id="q" placeholder="phone, wallet...">
+          </div>
+          <div class="field-group">
+            <label for="ty">Type</label>
+            <select id="ty">
+              <option value="">All</option>
+              <option value="lost">Lost</option>
+              <option value="found">Found</option>
+            </select>
+          </div>
+          <div class="field-group">
+            <label for="ca">Category</label>
+            <select id="ca"></select>
+          </div>
+          <div class="field-group">
+            <label for="lo">Location</label>
+            <select id="lo"></select>
+          </div>
+          <div class="field-group">
+            <label for="co">Colour</label>
+            <input id="co">
+          </div>
+          <div class="field-group">
+            <label for="df">From date</label>
+            <input id="df" type="date">
+          </div>
+        </div>
+      </section>
+
+      <p class="meta search-count" id="cnt"></p>
+      <div class="grid" id="res"></div>
+    </main>
+
+    <script src="js/app.js"></script>
+    <script>
+      layout('search.html');
+      $('#ca').innerHTML = opts(CATS, 'All');
+      $('#lo').innerHTML = opts(LOCS, 'All');
+
+      function run() {
+        const q = $('#q').value.toLowerCase();
+        const co = $('#co').value.toLowerCase();
+        const r = DB.get('items', []).filter(
+          (i) =>
+            i.status === 'approved' &&
+            (!q || (i.title + ' ' + i.desc).toLowerCase().includes(q)) &&
+            (!$('#ty').value || i.type === $('#ty').value) &&
+            (!$('#ca').value || i.category === $('#ca').value) &&
+            (!$('#lo').value || i.location === $('#lo').value) &&
+            (!co || i.color.toLowerCase().includes(co)) &&
+            (!$('#df').value || i.date >= $('#df').value),
+        );
+
+        $('#cnt').textContent = r.length + ' item(s) found';
+        $('#res').innerHTML =
+          r.map((i) => itemCard(i)).join('') ||
+          '<div class="empty">Nothing matches. Try fewer filters, or report your item.</div>';
+      }
+
+      document
+        .querySelectorAll('.filters input,.filters select')
+        .forEach((x) => (x.oninput = run));
+      run();
+    </script>
+  </body>
+</html>

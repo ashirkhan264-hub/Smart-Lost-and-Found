@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Login - Smart Lost &amp; Found</title>
+    <link rel="stylesheet" href="css/style.css">
+  </head>
+  <body>
+    <main class="wrap" style="max-width: 460px">
+      <div class="tabs">
+        <button class="btn" id="t1" onclick="tab(1)">Login</button>
+        <button class="btn ghost" id="t2" onclick="tab(2)">Register</button>
+      </div>
+
+      <form class="box" id="f1" onsubmit="return login(event)">
+        <label>Email</label>
+        <input id="le" type="email" required>
+        <label>Password</label>
+        <input id="lp" type="password" required>
+        <p class="meta">
+          Demo: admin@campus.edu / admin123 &nbsp;|&nbsp; student@campus.edu /
+          user123
+        </p>
+        <button class="btn tag">Login</button>
+      </form>
+
+      <form class="box" id="f2" hidden onsubmit="return reg(event)">
+        <label>Full name</label>
+        <input id="rn" required>
+        <label>Email</label>
+        <input id="re" type="email" required>
+        <label>Password (min 6 characters)</label>
+        <input id="rp" type="password" minlength="6" required>
+        <button class="btn tag" style="margin-top: 1rem">
+          Create account
+        </button>
+      </form>
+    </main>
+
+    <script src="js/app.js"></script>
+    <script>
+      layout('login.html');
+
+      function tab(n) {
+        $('#f1').hidden = n !== 1;
+        $('#f2').hidden = n !== 2;
+        $('#t1').className = 'btn' + (n === 1 ? '' : ' ghost');
+        $('#t2').className = 'btn' + (n === 2 ? '' : ' ghost');
+      }
+
+      function login(e) {
+        e.preventDefault();
+        const u = DB.get('users', []).find(
+          (u) =>
+            u.email === $('#le').value.trim().toLowerCase() &&
+            u.pass === $('#lp').value,
+        );
+
+        if (!u) return toast('Wrong email or password'), false;
+        if (u.blocked) return toast('This account is blocked by admin'), false;
+
+        DB.set('session', u.email);
+        location.href = u.role === 'admin' ? 'admin.html' : 'index.html';
+        return false;
+      }
+
+      function reg(e) {
+        e.preventDefault();
+        const us = DB.get('users', []);
+        const em = $('#re').value.trim().toLowerCase();
+
+        if (us.some((u) => u.email === em)) {
+          return toast('Email already registered'), false;
+        }
+
+        us.push({
+          name: $('#rn').value.trim(),
+          email: em,
+          pass: $('#rp').value,
+          role: 'user',
+          blocked: false,
+        });
+        DB.set('users', us);
+        DB.set('session', em);
+        location.href = 'index.html';
+        return false;
+      }
+    </script>
+  </body>
+</html>
