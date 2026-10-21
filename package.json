@@ -1,0 +1,27 @@
+{
+  "name": "lost-found-frontend",
+  "version": "1.0.0",
+  "description": "",
+  "main": "db.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ashirkhan264-hub/Smart-Lost-and-Found.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/ashirkhan264-hub/Smart-Lost-and-Found/issues"
+  },
+  "homepage": "https://github.com/ashirkhan264-hub/Smart-Lost-and-Found#readme",
+  "dependencies": {
+    "cors": "^2.8.6",
+    "express": "^5.3.0",
+    "mssql": "^12.7.10"
+  }
+}
