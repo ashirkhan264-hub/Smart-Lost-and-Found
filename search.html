@@ -2,84 +2,241 @@
 <html lang="en">
   <head>
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Search - Smart Lost &amp; Found</title>
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="description" content="Search approved lost and found reports on campus.">
+    <title>Search items - Smart Lost &amp; Found</title>
     <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/search-page.css">
   </head>
-  <body>
-    <main class="wrap page-shell">
-      <header class="page-header">
-        <p class="eyebrow">Find matching items</p>
-        <h1>Search items</h1>
+  <body class="search-page">
+    <main class="wrap search-shell">
+      <header class="search-heading">
+        <p class="eyebrow">Campus lost &amp; found</p>
+        <h1>Find what you’re looking for.</h1>
+        <p>Search recent reports or narrow them down with the filters below.</p>
       </header>
 
-      <section class="box filters-box">
-        <div class="filters">
-          <div class="field-group">
-            <label for="q">Keyword</label>
-            <input id="q" placeholder="phone, wallet...">
+      <section class="search-panel" aria-label="Search and filters">
+        <form class="search-form" onsubmit="return doSearch(event)">
+          <label class="visually-hidden" for="q">Search by item name or details</label>
+          <span class="search-icon" aria-hidden="true">⌕</span>
+          <input
+            id="q"
+            type="search"
+            autocomplete="off"
+            placeholder="Try “blue wallet” or “cracked phone”"
+          >
+          <button class="btn tag search-submit" type="submit">Search items</button>
+        </form>
+
+        <div class="filter-heading">
+          <div>
+            <h2>Filter results</h2>
+            <p>Choose any filters you need, then apply them.</p>
           </div>
-          <div class="field-group">
-            <label for="ty">Type</label>
-            <select id="ty">
-              <option value="">All</option>
-              <option value="lost">Lost</option>
-              <option value="found">Found</option>
+          <button class="btn ghost clear-button" type="button" onclick="clearF()">Clear all</button>
+        </div>
+
+        <div class="filter-grid">
+          <fieldset class="filter-group type-filter">
+            <legend>Report type</legend>
+            <div class="type-options">
+              <label class="filter-choice"><input type="checkbox" id="tLost" checked><span>Lost</span></label>
+              <label class="filter-choice"><input type="checkbox" id="tFound" checked><span>Found</span></label>
+            </div>
+          </fieldset>
+
+          <fieldset class="filter-group category-filter">
+            <legend>Category</legend>
+            <select id="category" aria-label="Filter by category">
+              <option value="">All categories</option>
+            </select>
+          </fieldset>
+
+          <div class="filter-group location-filter">
+            <label for="loc">Location</label>
+            <select id="loc">
+              <option value="">All locations</option>
+              <option>Library</option>
+              <option>Cafeteria</option>
+              <option>Main Gate</option>
+              <option>Admin Block</option>
+              <option>CS Department</option>
+              <option>Mosque</option>
+              <option>Sports Ground</option>
+              <option>Hostel</option>
+              <option>Other</option>
             </select>
           </div>
-          <div class="field-group">
-            <label for="ca">Category</label>
-            <select id="ca"></select>
-          </div>
-          <div class="field-group">
-            <label for="lo">Location</label>
-            <select id="lo"></select>
-          </div>
-          <div class="field-group">
-            <label for="co">Colour</label>
-            <input id="co">
-          </div>
-          <div class="field-group">
-            <label for="df">From date</label>
-            <input id="df" type="date">
-          </div>
+
+          <fieldset class="filter-group color-filter">
+            <legend>Colour</legend>
+            <select id="color" aria-label="Filter by colour">
+              <option value="">All colours</option>
+            </select>
+          </fieldset>
+
+          <fieldset class="filter-group date-filter">
+            <legend>Date reported</legend>
+            <div class="date-options">
+              <label><span class="visually-hidden">From date</span><input type="date" id="d1" aria-label="From date"></label>
+              <span aria-hidden="true">to</span>
+              <label><span class="visually-hidden">To date</span><input type="date" id="d2" aria-label="To date"></label>
+            </div>
+          </fieldset>
+
+          <button class="btn apply-button" type="button" onclick="applyFilters()">Apply filters</button>
         </div>
       </section>
 
-      <p class="meta search-count" id="cnt"></p>
-      <div class="grid" id="res"></div>
+      <section class="results-section" aria-labelledby="results-title">
+        <div class="results-heading">
+          <div>
+            <p class="eyebrow">Browse reports</p>
+            <h2 id="results-title">Matching items</h2>
+          </div>
+          <div class="results-tools">
+            <span id="cnt" aria-live="polite">Loading items…</span>
+            <label class="visually-hidden" for="sort">Sort reports</label>
+            <select id="sort" aria-label="Sort reports">
+              <option value="new">Newest first</option>
+              <option value="old">Oldest first</option>
+            </select>
+          </div>
+        </div>
+        <div class="search-results" id="res" aria-live="polite">
+          <div class="results-message">Loading approved reports…</div>
+        </div>
+        <div class="results-pagination" id="pager" role="navigation" aria-label="Search results pages"></div>
+      </section>
     </main>
 
     <script src="js/app.js"></script>
     <script>
+      const API = 'http://localhost:5000/api';
       layout('search.html');
-      $('#ca').innerHTML = opts(CATS, 'All');
-      $('#lo').innerHTML = opts(LOCS, 'All');
 
-      function run() {
-        const q = $('#q').value.toLowerCase();
-        const co = $('#co').value.toLowerCase();
-        const r = DB.get('items', []).filter(
-          (i) =>
-            i.status === 'approved' &&
-            (!q || (i.title + ' ' + i.desc).toLowerCase().includes(q)) &&
-            (!$('#ty').value || i.type === $('#ty').value) &&
-            (!$('#ca').value || i.category === $('#ca').value) &&
-            (!$('#lo').value || i.location === $('#lo').value) &&
-            (!co || i.color.toLowerCase().includes(co)) &&
-            (!$('#df').value || i.date >= $('#df').value),
-        );
+      const SEARCH_CATEGORIES = CATS;
+      const COLS = [['Black', '#171c19'], ['White', '#fff'], ['Grey', '#888'], ['Blue', '#3268c8'], ['Red', '#cf4a43'], ['Green', '#43845d'], ['Yellow', '#e5b62d'], ['Brown', '#795333']];
+      const ICONS = { Electronics: '📱', Bags: '🎒', 'Wallet/Cards': '👛', Keys: '🔑', Clothing: '🧥', 'Books/Stationery': '📚', Other: '📦' };
+      const PER_PAGE = 9;
+      let ALL = [];
+      let page = 1;
 
-        $('#cnt').textContent = r.length + ' item(s) found';
-        $('#res').innerHTML =
-          r.map((i) => itemCard(i)).join('') ||
-          '<div class="empty">Nothing matches. Try fewer filters, or report your item.</div>';
+      $('#category').insertAdjacentHTML('beforeend', SEARCH_CATEGORIES.map(category =>
+        `<option value="${esc(category)}">${esc(category)}</option>`,
+      ).join(''));
+      $('#color').insertAdjacentHTML('beforeend', COLS.map(([name]) =>
+        `<option value="${esc(name)}">${esc(name)}</option>`,
+      ).join(''));
+
+      ['tLost', 'tFound', 'category', 'color', 'loc', 'd1', 'd2'].forEach(id => {
+        $('#' + id).addEventListener('change', applyFilters);
+      });
+      $('#sort').addEventListener('change', render);
+
+      async function load() {
+        const searchButton = document.querySelector('.search-submit');
+        searchButton.disabled = true;
+        $('#cnt').textContent = 'Searching…';
+        $('#res').innerHTML = '<div class="results-message">Searching approved reports…</div>';
+        try {
+          const response = await fetch(`${API}/items?q=${encodeURIComponent($('#q').value.trim())}`);
+          const contentType = response.headers.get('content-type') || '';
+          if (!contentType.includes('application/json')) {
+            throw new Error('The server returned an unexpected response. Check that the API is running.');
+          }
+          const data = await response.json();
+          if (!response.ok) throw new Error(data.message || 'Could not load items.');
+          if (!Array.isArray(data)) throw new Error('The server returned an invalid item list.');
+          ALL = data;
+          render();
+        } catch (error) {
+          $('#cnt').textContent = 'Search unavailable';
+          $('#res').innerHTML = `<div class="results-message results-error"><strong>Could not load items</strong><span>${esc(error.message || 'Check that the API server is running, then try again.')}</span><button class="btn ghost" type="button" onclick="load()">Try again</button></div>`;
+        } finally {
+          searchButton.disabled = false;
+        }
       }
 
-      document
-        .querySelectorAll('.filters input,.filters select')
-        .forEach((x) => (x.oninput = run));
-      run();
+      function doSearch(event) {
+        event.preventDefault();
+        page = 1;
+        load();
+        return false;
+      }
+
+      function applyFilters() {
+        page = 1;
+        render();
+      }
+
+      function clearF() {
+        $('#q').value = '';
+        $('#tLost').checked = true;
+        $('#tFound').checked = true;
+        $('#loc').value = '';
+        $('#d1').value = '';
+        $('#d2').value = '';
+        $('#category').value = '';
+        $('#color').value = '';
+        page = 1;
+        load();
+      }
+
+      function render() {
+        const from = $('#d1').value;
+        const to = $('#d2').value;
+        const selectedCategory = $('#category').value;
+        const selectedColor = $('#color').value;
+        const reports = ALL.filter(item => {
+          const date = String(item.item_date).slice(0, 10);
+          return ((item.type === 'lost' && $('#tLost').checked) || (item.type === 'found' && $('#tFound').checked)) &&
+            (!selectedCategory || item.category === selectedCategory) &&
+            (!$('#loc').value || item.location === $('#loc').value) &&
+            (!selectedColor || String(item.color || '').toLowerCase() === selectedColor.toLowerCase()) &&
+            (!from || date >= from) &&
+            (!to || date <= to);
+        });
+        reports.sort((a, b) => {
+          const order = String(a.item_date).localeCompare(String(b.item_date)) || a.id - b.id;
+          return $('#sort').value === 'old' ? order : -order;
+        });
+
+        $('#cnt').textContent = `${reports.length} ${reports.length === 1 ? 'item' : 'items'} found`;
+        const totalPages = Math.max(1, Math.ceil(reports.length / PER_PAGE));
+        if (page > totalPages) page = totalPages;
+        const current = reports.slice((page - 1) * PER_PAGE, page * PER_PAGE);
+        $('#res').innerHTML = current.map(card).join('') ||
+          '<div class="results-message"><strong>No matching items</strong><span>Try a different search or clear some filters.</span><button class="btn ghost" type="button" onclick="clearF()">Clear filters</button></div>';
+        $('#pager').innerHTML = totalPages > 1
+          ? Array.from({ length: totalPages }, (_, index) => {
+            const number = index + 1;
+            return `<button type="button" class="page-button ${number === page ? 'is-current' : ''}" aria-label="Page ${number}" aria-current="${number === page ? 'page' : 'false'}" onclick="page=${number};render()">${number}</button>`;
+          }).join('')
+          : '';
+      }
+
+      function card(item) {
+        const user = me();
+        const ownReport = user && user.email.toLowerCase() === item.owner_email.toLowerCase();
+        const image = item.image
+          ? `<div class="thumb search-thumb" style="background-image:url('${esc(item.image)}')" role="img" aria-label="${esc(item.title)}"></div>`
+          : `<div class="thumb search-thumb search-thumb-placeholder" aria-hidden="true">${ICONS[item.category] || ICONS.Other}</div>`;
+        return `<article class="card search-card">
+          ${image}
+          <div class="body search-card-body">
+            <span class="badge b-${item.type}">${item.type === 'lost' ? 'Lost item' : 'Found item'}</span>
+            <h3>${esc(item.title)}</h3>
+            <p class="search-item-meta">${esc(item.category)} <span>·</span> ${esc(item.color)}</p>
+            <p class="search-item-meta">${esc(item.location)} <span>·</span> ${String(item.item_date).slice(0, 10)}</p>
+            <p class="search-description">${esc(item.description)}</p>
+            <div class="search-card-action">${ownReport ? '<span class="own-report-label">Your report</span>' : claimButton(item)}</div>
+          </div>
+        </article>`;
+      }
+
+      load();
     </script>
   </body>
 </html>

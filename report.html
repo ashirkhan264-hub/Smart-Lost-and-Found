@@ -1,166 +1,417 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Report an Item - Smart Lost &amp; Found</title>
+    <meta
+      name="description"
+      content="Report a lost or found item on campus and help it get back to its owner."
+    >
+    <title>Report an item - Smart Lost &amp; Found</title>
     <link rel="stylesheet" href="css/style.css">
   </head>
   <body>
-    <main class="wrap page-shell narrow-page">
+    <main class="wrap page-shell">
       <header class="page-header">
         <p class="eyebrow">Lost something or found an item?</p>
         <h1>Submit a report</h1>
         <p class="page-intro">
-          Add a few clear details so other students can find it and our matching
-          system can identify possible matches.
+          Share a few helpful details so other students can recognize the item
+          and our matching system can find possible matches.
         </p>
       </header>
 
-      <form class="box report-form" onsubmit="return save(event)">
-        <fieldset class="report-type">
-          <legend>What would you like to report?</legend>
-          <div class="seg">
-            <label>
-              <input type="radio" name="type" value="lost" checked>
-              <span>I lost something</span>
+      <div class="report-layout">
+        <form
+          id="rf"
+          class="box report-form"
+          onsubmit="return submitReport(event)"
+        >
+          <fieldset class="report-type">
+            <legend>What would you like to report?</legend>
+            <div class="seg report-seg">
+              <label>
+                <input type="radio" name="t" value="lost" checked>
+                <span>I lost something</span>
+              </label>
+              <label>
+                <input type="radio" name="t" value="found">
+                <span>I found something</span>
+              </label>
+            </div>
+          </fieldset>
+
+          <section class="report-section" aria-labelledby="item-details-title">
+            <div class="report-section-heading">
+              <span class="report-step" aria-hidden="true">01</span>
+              <div>
+                <h2 id="item-details-title">Item details</h2>
+                <p>Describe it so its owner can recognize it.</p>
+              </div>
+            </div>
+
+            <div class="field-group">
+              <label for="title">Item name</label>
+              <input
+                id="title"
+                name="title"
+                required
+                maxlength="80"
+                placeholder="e.g. Black Samsung phone"
+                autocomplete="off"
+              >
+            </div>
+
+            <div class="field-group">
+              <span class="field-label" id="category-label">Category</span>
+              <div
+                class="report-chips"
+                role="group"
+                aria-labelledby="category-label"
+              >
+                <button class="report-chip is-selected" type="button" data-v="Electronics" aria-pressed="true">📱 Electronics</button>
+                <button class="report-chip" type="button" data-v="Bags" aria-pressed="false">🎒 Bags</button>
+                <button class="report-chip" type="button" data-v="Wallet/Cards" aria-pressed="false">👛 Wallet/Cards</button>
+                <button class="report-chip" type="button" data-v="Keys" aria-pressed="false">🔑 Keys</button>
+                <button class="report-chip" type="button" data-v="Clothing" aria-pressed="false">🧥 Clothing</button>
+                <button class="report-chip" type="button" data-v="Books/Stationery" aria-pressed="false">📚 Books</button>
+                <button class="report-chip" type="button" data-v="Other" aria-pressed="false">📦 Other</button>
+              </div>
+            </div>
+
+            <div class="field-group">
+              <span class="field-label" id="color-label">Colour</span>
+              <div
+                class="report-swatches"
+                role="group"
+                aria-labelledby="color-label"
+              >
+                <button class="report-swatch is-selected" type="button" data-v="Black" aria-label="Black" aria-pressed="true" style="--swatch-color: #111"></button>
+                <button class="report-swatch" type="button" data-v="White" aria-label="White" aria-pressed="false" style="--swatch-color: #fff"></button>
+                <button class="report-swatch" type="button" data-v="Grey" aria-label="Grey" aria-pressed="false" style="--swatch-color: #888"></button>
+                <button class="report-swatch" type="button" data-v="Blue" aria-label="Blue" aria-pressed="false" style="--swatch-color: #1e5fd1"></button>
+                <button class="report-swatch" type="button" data-v="Red" aria-label="Red" aria-pressed="false" style="--swatch-color: #d62828"></button>
+                <button class="report-swatch" type="button" data-v="Green" aria-label="Green" aria-pressed="false" style="--swatch-color: #2a9d4a"></button>
+                <button class="report-swatch" type="button" data-v="Yellow" aria-label="Yellow" aria-pressed="false" style="--swatch-color: #f4c20d"></button>
+                <button class="report-swatch" type="button" data-v="Brown" aria-label="Brown" aria-pressed="false" style="--swatch-color: #7b4a2a"></button>
+                <button class="report-swatch report-swatch-multicolor" type="button" data-v="Multicolour" aria-label="Multicolour" aria-pressed="false"></button>
+              </div>
+            </div>
+
+            <div class="field-group">
+              <label for="desc">Description</label>
+              <textarea
+                id="desc"
+                name="description"
+                rows="4"
+                required
+                maxlength="500"
+                placeholder="Add identifying details such as brand, marks, stickers or contents."
+              ></textarea>
+              <p class="field-hint">
+                Keep one unique detail private so the real owner can verify it.
+                Never include card numbers or other sensitive information.
+              </p>
+            </div>
+          </section>
+
+          <section class="report-section" aria-labelledby="location-title">
+            <div class="report-section-heading">
+              <span class="report-step" aria-hidden="true">02</span>
+              <div>
+                <h2 id="location-title">Where and when?</h2>
+                <p>Your best estimate is helpful.</p>
+              </div>
+            </div>
+
+            <div class="field-grid">
+              <div class="field-group">
+                <label for="loc">Campus location</label>
+                <select id="loc" name="location">
+                  <option>Library</option>
+                  <option>Cafeteria</option>
+                  <option>Main Gate</option>
+                  <option>Admin Block</option>
+                  <option>CS Department</option>
+                  <option>Sports Ground</option>
+                </select>
+              </div>
+              <div class="field-group">
+                <label for="date">Date lost or found</label>
+                <input id="date" name="date" type="date" required>
+              </div>
+              <div class="field-group">
+                <label for="time">
+                  Approximate time <span class="optional-label">Optional</span>
+                </label>
+                <input id="time" name="time" type="time">
+              </div>
+              <div class="field-group">
+                <label for="spot">
+                  Exact spot <span class="optional-label">Optional</span>
+                </label>
+                <input
+                  id="spot"
+                  name="spot"
+                  maxlength="120"
+                  placeholder="e.g. 2nd floor, near the window"
+                >
+              </div>
+            </div>
+          </section>
+
+          <section class="report-section" aria-labelledby="photo-title">
+            <div class="report-section-heading">
+              <span class="report-step" aria-hidden="true">03</span>
+              <div>
+                <h2 id="photo-title">Add a photo</h2>
+                <p>A clear image can make the item easier to identify.</p>
+              </div>
+            </div>
+
+            <label class="report-upload" for="img">
+              <span class="report-upload-icon" aria-hidden="true">↑</span>
+              <span class="report-upload-copy">
+                <strong>Choose a photo</strong>
+                <span>JPG or PNG, up to 5 MB</span>
+              </span>
+              <span class="btn ghost sm">Browse files</span>
             </label>
-            <label>
-              <input type="radio" name="type" value="found">
-              <span>I found something</span>
-            </label>
-          </div>
-        </fieldset>
+            <input id="img" name="image" type="file" accept="image/jpeg,image/png" hidden>
+            <img
+              id="prev"
+              alt="Selected item photo preview"
+              class="photo-preview"
+              hidden
+            >
+          </section>
 
-        <div class="field-group">
-          <label for="title">Item name</label>
-          <input
-            id="title"
-            required
-            maxlength="80"
-            placeholder="e.g. Black Samsung phone"
-          >
-        </div>
+          <section class="report-section" aria-labelledby="contact-title">
+            <div class="report-section-heading">
+              <span class="report-step" aria-hidden="true">04</span>
+              <div>
+                <h2 id="contact-title">Contact preferences</h2>
+                <p>Choose how you would prefer to be contacted.</p>
+              </div>
+            </div>
 
-        <div class="field-grid">
-          <div class="field-group">
-            <label for="cat">Category</label>
-            <select id="cat" required></select>
-          </div>
-          <div class="field-group">
-            <label for="color">Colour</label>
-            <input id="color" required maxlength="40" placeholder="e.g. Black">
-          </div>
-          <div class="field-group">
-            <label for="loc">Campus location</label>
-            <select id="loc" required></select>
-          </div>
-          <div class="field-group">
-            <label for="date">Date lost or found</label>
-            <input id="date" type="date" required>
-          </div>
-        </div>
+            <div class="field-grid">
+              <div class="field-group">
+                <label for="phone">
+                  Phone or WhatsApp <span class="optional-label">Optional</span>
+                </label>
+                <input
+                  id="phone"
+                  name="phone"
+                  type="tel"
+                  autocomplete="tel"
+                  placeholder="03xx xxxxxxx"
+                >
+              </div>
+              <div class="field-group">
+                <label for="contact">Preferred contact</label>
+                <select id="contact" name="contact">
+                  <option>Through the system</option>
+                  <option>WhatsApp</option>
+                  <option>Email</option>
+                </select>
+              </div>
+            </div>
+          </section>
 
-        <div class="field-group">
-          <label for="desc">Description</label>
-          <textarea
-            id="desc"
-            rows="4"
-            required
-            maxlength="500"
-            placeholder="Add identifying details such as brand, marks, contents or other unique features."
-          ></textarea>
-          <p class="field-hint">
-            Specific details help improve the relevance of potential matches.
+          <footer class="form-footer">
+            <p class="field-hint">
+              Your report will be reviewed by an admin before it appears to
+              other students.
+            </p>
+            <div class="report-actions">
+              <a class="btn ghost" href="my-reports.html">Cancel</a>
+              <button class="btn tag" id="sub" type="submit">
+                Submit report
+              </button>
+            </div>
+          </footer>
+        </form>
+
+        <aside class="report-sidebar" aria-label="Report preview and tips">
+          <section class="box report-preview-panel">
+            <div class="report-aside-heading">
+              <div>
+                <p class="eyebrow">As you report</p>
+                <h2>Live preview</h2>
+              </div>
+              <span class="report-live-indicator">Live</span>
+            </div>
+
+            <article class="card report-preview-card">
+              <div class="thumb report-preview-thumb" id="pthumb" aria-hidden="true">📱</div>
+              <div class="body">
+                <span class="badge b-lost" id="pbadge">Lost</span>
+                <h3 id="ptitle">Your item name</h3>
+                <p class="meta" id="pmeta">Electronics · Black<br>Library</p>
+              </div>
+            </article>
+            <p class="field-hint">
+              Your preview updates as you fill in the report.
+            </p>
+          </section>
+
+          <section class="box report-tips">
+            <p class="eyebrow">Helpful tips</p>
+            <h2>A better report gets better matches.</h2>
+            <ul>
+              <li>Include unique marks like cracks, stickers or keychains.</li>
+              <li>Choose the closest location and date you can remember.</li>
+              <li>Keep one identifying detail private for verification.</li>
+            </ul>
+          </section>
+
+          <p class="report-privacy-note">
+            <span aria-hidden="true">🔒</span>
+            Your report is reviewed before it becomes visible to others.
           </p>
-        </div>
-
-        <div class="field-group">
-          <label for="img">Photo <span class="optional-label">Optional</span></label>
-          <input id="img" type="file" accept="image/*">
-          <p class="field-hint">A clear photo can help people recognize the item.</p>
-          <img id="prev" alt="Selected item photo preview" class="photo-preview">
-        </div>
-
-        <div class="form-footer">
-          <p class="field-hint">
-            Reports are submitted as pending and appear after admin verification.
-          </p>
-          <button class="btn tag">Submit report</button>
-        </div>
-      </form>
+        </aside>
+      </div>
     </main>
 
     <script src="js/app.js"></script>
     <script>
-      layout('report.html');
-      const u = need();
+      const API = 'http://localhost:5000/api';
 
-      $('#cat').innerHTML = opts(CATS);
-      $('#loc').innerHTML = opts(LOCS);
+      layout('report.html');
+      const user = need();
+      let category = 'Electronics';
+      let color = 'Black';
+      let imgData = '';
+
+      const ICONS = {
+        Electronics: '📱',
+        Bags: '🎒',
+        'Wallet/Cards': '👛',
+        Keys: '🔑',
+        Clothing: '🧥',
+        'Books/Stationery': '📚',
+        Other: '📦',
+      };
+
       $('#date').value = day();
       $('#date').max = day();
-      let data = '';
 
-      $('#img').onchange = (e) => {
-        const file = e.target.files[0];
-        if (!file) {
-          data = '';
-          $('#prev').removeAttribute('src');
-          $('#prev').hidden = true;
-          return;
+      function preview() {
+        const type = $('input[name="t"]:checked').value;
+
+        $('#pbadge').textContent = type === 'lost' ? 'Lost' : 'Found';
+        $('#pbadge').className = `badge b-${type}`;
+        $('#ptitle').textContent = $('#title').value || 'Your item name';
+        $('#pmeta').innerHTML = `${category} · ${color}<br>${$('#loc').value}`;
+
+        if (!imgData) {
+          $('#pthumb').textContent = ICONS[category] || '📦';
         }
+      }
+
+      document.querySelectorAll('.report-chip').forEach((button) => {
+        button.addEventListener('click', () => {
+          document.querySelectorAll('.report-chip').forEach((chip) => {
+            chip.classList.remove('is-selected');
+            chip.setAttribute('aria-pressed', 'false');
+          });
+          button.classList.add('is-selected');
+          button.setAttribute('aria-pressed', 'true');
+          category = button.dataset.v;
+          preview();
+        });
+      });
+
+      document.querySelectorAll('.report-swatch').forEach((button) => {
+        button.addEventListener('click', () => {
+          document.querySelectorAll('.report-swatch').forEach((swatch) => {
+            swatch.classList.remove('is-selected');
+            swatch.setAttribute('aria-pressed', 'false');
+          });
+          button.classList.add('is-selected');
+          button.setAttribute('aria-pressed', 'true');
+          color = button.dataset.v;
+          preview();
+        });
+      });
+
+      $('#title').addEventListener('input', preview);
+      $('#loc').addEventListener('change', preview);
+      document.querySelectorAll('input[name="t"]').forEach((radio) => {
+        radio.addEventListener('change', preview);
+      });
+      preview();
+
+      $('#img').addEventListener('change', (event) => {
+        const file = event.target.files[0];
+        if (!file) return;
 
         const reader = new FileReader();
         reader.onload = () => {
           const image = new Image();
           image.onload = () => {
-            const scale = Math.min(1, 500 / image.width);
+            const scale = Math.min(1, 600 / image.width);
             const canvas = document.createElement('canvas');
             canvas.width = image.width * scale;
             canvas.height = image.height * scale;
-            canvas.getContext('2d').drawImage(
-              image,
-              0,
-              0,
-              canvas.width,
-              canvas.height,
-            );
-            data = canvas.toDataURL('image/jpeg', 0.7);
-            $('#prev').src = data;
+            canvas.getContext('2d').drawImage(image, 0, 0, canvas.width, canvas.height);
+            imgData = canvas.toDataURL('image/jpeg', 0.7);
+            $('#prev').src = imgData;
             $('#prev').hidden = false;
+            $('#pthumb').innerHTML =
+              `<img src="${imgData}" alt="" class="report-preview-image">`;
           };
-          image.onerror = () => toast('Could not read that image. Please choose another.');
           image.src = reader.result;
         };
-        reader.onerror = () => toast('Could not read that image. Please try again.');
         reader.readAsDataURL(file);
-      };
+      });
 
-      function save(e) {
-        e.preventDefault();
-        const items = DB.get('items', []);
-        items.push({
-          id: uid(),
-          type: $('input[name=type]:checked').value,
+      async function submitReport(event) {
+        event.preventDefault();
+
+        const button = $('#sub');
+        button.disabled = true;
+        button.textContent = 'Submitting...';
+
+        const spot = $('#spot').value.trim();
+        const body = {
+          type: $('input[name="t"]:checked').value,
           title: $('#title').value.trim(),
-          category: $('#cat').value,
-          color: $('#color').value.trim(),
+          category,
+          color,
           location: $('#loc').value,
           date: $('#date').value,
-          desc: $('#desc').value.trim(),
-          img: data,
-          owner: u.email,
-          status: 'pending',
-        });
+          desc: $('#desc').value.trim() + (spot ? ` (Spot: ${spot})` : ''),
+          img: imgData,
+          owner: user.email,
+        };
 
         try {
-          DB.set('items', items);
+          const response = await fetch(`${API}/items`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(body),
+          });
+          const result = await response.json();
+
+          if (!response.ok) {
+            toast(result.message || 'Could not submit report');
+            button.disabled = false;
+            button.textContent = 'Submit report';
+            return false;
+          }
+
+          toast('Report submitted. Waiting for admin verification.');
+          setTimeout(() => {
+            location.href = 'my-reports.html';
+          }, 1200);
         } catch (error) {
-          return toast('Image too large to save. Please choose a smaller photo.'), false;
+          toast('Cannot reach server. Is node server.js running?');
+          button.disabled = false;
+          button.textContent = 'Submit report';
         }
 
-        location.href = 'my-reports.html';
         return false;
       }
     </script>

@@ -12,8 +12,8 @@
         <p class="eyebrow">Smart matching</p>
         <h1>Possible matches</h1>
         <p class="page-intro">
-          We compare your reports with approved reports from other users. Review
-          the item details and send a claim if you recognize a match.
+          We compare lost and found reports. Send a claim for a matching item;
+          it stays listed until an admin approves the request.
         </p>
       </header>
 
@@ -36,59 +36,94 @@
     <script>
       layout('matches.html');
       const user = need();
-      const suggestions = matchesFor(user.email);
+      const API = 'http://localhost:5000/api';
       const matchScore = (score) =>
         score >= 75 ? 'Strong match' : score >= 55 ? 'Good match' : 'Possible match';
 
-      $('#summary').innerHTML = `
-        <div class="stat"><b>${suggestions.length}</b>Possible matches</div>
-        <div class="stat"><b>40%</b>Minimum score</div>
-      `;
+      async function loadMatches() {
+        try {
+          const response = await fetch(
+            `${API}/matches?email=${encodeURIComponent(user.email)}`,
+          );
+          const contentType = response.headers.get('content-type') || '';
+          if (!contentType.includes('application/json')) {
+            throw new Error('The API server is outdated. Restart it with "npm start" and reload this page.');
+          }
+          const suggestions = await response.json();
+          if (!response.ok) {
+            throw new Error(suggestions.message || 'Could not load matches');
+          }
+          const matchLink = document.querySelector('nav a[href="matches.html"]');
+          if (matchLink && suggestions.length) {
+            matchLink.insertAdjacentHTML(
+              'beforeend',
+              `<span class="pill">${suggestions.length}</span>`,
+            );
+          }
+          $('#summary').innerHTML = `
+            <div class="stat"><b>${suggestions.length}</b>Possible matches</div>
+            <div class="stat"><b>40%</b>Minimum score</div>
+          `;
+          $('#list').innerHTML =
+            suggestions
+              .map(
+                ({ mine, other, s, sameOwner }) => `
+                  <article class="match-result">
+                    <div class="match-result-header">
+                      <span class="match-label">${matchScore(s)}</span>
+                      <span class="match-date">Reported ${esc(other.date)}</span>
+                    </div>
+                    <div class="match">
+                      <div class="match-item">
+                        <p class="eyebrow">Your report</p>
+                        ${itemCard(mine, false)}
+                      </div>
+                      <div class="score" aria-label="${s} percent match">
+                        ${s}%<small>match score</small>
+                      </div>
+                      <div class="match-item">
+                        <p class="eyebrow">${sameOwner ? 'Your found report' : 'Approved report'}</p>
+                        ${itemCard(other, false)}
+                      </div>
+                    </div>
+                    <div class="match-result-footer">
+                      ${
+                        sameOwner
+                          ? `<p class="field-hint">
+                              Send this match to the admin for verification.
+                              Neither report will disappear until the claim is approved.
+                            </p>
+                            ${claimButton(other, mine.id)}`
+                          : `<p class="field-hint">
+                              Send a claim to the admin. This report stays visible
+                              until the claim is approved.
+                            </p>
+                            ${claimButton(other)}`
+                      }
+                    </div>
+                  </article>
+                `,
+              )
+              .join('') ||
+            `<div class="empty-state">
+              <div class="empty-icon" aria-hidden="true">⌕</div>
+              <h2>No possible matches yet</h2>
+              <p>
+                Matches appear when the reports have enough details in common.
+                Send a claim for a match and wait for admin verification.
+              </p>
+              <a class="btn tag" href="report.html">Report an item</a>
+            </div>`;
+        } catch (error) {
+          $('#summary').innerHTML = '';
+          $('#list').innerHTML = `<div class="empty-state">
+            <h2>Could not load matches</h2>
+            <p>${esc(error.message || 'Cannot reach the database server.')}</p>
+          </div>`;
+        }
+      }
 
-      $('#list').innerHTML =
-        suggestions
-          .map(
-            ({ mine, other, s }) => `
-              <article class="match-result">
-                <div class="match-result-header">
-                  <span class="match-label">${matchScore(s)}</span>
-                  <span class="match-date">Reported ${esc(other.date)}</span>
-                </div>
-                <div class="match">
-                  <div class="match-item">
-                    <p class="eyebrow">Your report</p>
-                    ${itemCard(mine, false)}
-                  </div>
-                  <div class="score" aria-label="${s} percent match">
-                    ${s}%<small>match score</small>
-                  </div>
-                  <div class="match-item">
-                    <p class="eyebrow">Approved report</p>
-                    ${itemCard(other, false)}
-                  </div>
-                </div>
-                <div class="match-result-footer">
-                  <p class="field-hint">
-                    Compare the item details. If you believe this is yours,
-                    contact the reporter through a claim request.
-                  </p>
-                  <button class="btn tag" onclick="openClaim('${other.id}')">
-                    Send claim request
-                  </button>
-                </div>
-              </article>
-            `,
-          )
-          .join('') ||
-        `<div class="empty-state">
-          <div class="empty-icon" aria-hidden="true">⌕</div>
-          <h2>No possible matches yet</h2>
-          <p>
-            Once a report is approved, we’ll compare it with other reports and
-            show relevant suggestions here.
-          </p>
-          <a class="btn tag" href="report.html">Report an item</a>
-        </div>`;
+      loadMatches();
     </script>
   </body>
 </html>

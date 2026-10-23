@@ -24,32 +24,54 @@ const me=()=>DB.get('users',[]).find(u=>u.email===DB.get('session'));
 function need(role){const u=me();if(!u||(role&&u.role!==role)){location.href='login.html';throw 0}return u}
 function logout(){localStorage.removeItem('slf_session');location.href='index.html'}
 function toast(m){const t=$('#toast');t.textContent=m;t.style.display='block';clearTimeout(t._t);t._t=setTimeout(()=>t.style.display='none',2600)}
-function score(a,b){
- let s=a.category===b.category?30:0;
- if(a.color.trim().toLowerCase()===b.color.trim().toLowerCase())s+=20;
- const w=t=>new Set(((t.title+' '+t.desc).toLowerCase().match(/[a-z0-9]{3,}/g))||[]);
- const A=w(a),B=w(b),i=[...A].filter(x=>B.has(x)).length,u=new Set([...A,...B]).size||1;
- s+=Math.round(25*Math.min(1,i/u*2.5));
- if(a.location===b.location)s+=15;
- const d=Math.abs(new Date(a.date)-new Date(b.date))/864e5;s+=d<=1?10:d<=3?7:d<=7?4:0;
- return Math.min(100,s)}
-function matchesFor(email){
- const items=DB.get('items',[]),out=[];
- items.filter(i=>i.owner===email&&['pending','approved'].includes(i.status)).forEach(mine=>{
-  items.filter(o=>o.type!==mine.type&&o.owner!==email&&o.status==='approved').forEach(o=>{const s=score(mine,o);if(s>=40)out.push({mine,other:o,s})})});
- return out.sort((a,b)=>b.s-a.s)}
+const APP_API='http://localhost:5000/api';
 function layout(active){
- const u=me(),n=u?matchesFor(u.email).length:0;
- const L=[['index.html','Home'],['search.html','Search items'],['report.html','Report item'],['matches.html','My matches'+(n?`<span class="pill">${n}</span>`:'')],['my-reports.html','My reports']];
+ const u=me();
+ const L=[['index.html','Home'],['search.html','Search items'],['report.html','Report item'],['matches.html','My matches'],['my-reports.html','My reports']];
  if(u&&u.role==='admin')L.push(['admin.html','Admin']);
  document.body.insertAdjacentHTML('afterbegin',`<nav><div class="wrap"><b>🔎 Smart Lost &amp; Found</b>${L.map(l=>`<a href="${l[0]}" class="${l[0]===active?'on':''}">${l[1]}</a>`).join('')}${u?`<a href="#" onclick="logout()">Logout (${esc(u.name.split(' ')[0])})</a>`:'<a href="login.html">Login</a>'}</div></nav><div id="toast"></div>
- <dialog id="claimDlg"><form method="dialog" onsubmit="return submitClaim(event)"><h3>Send claim request</h3><p class="meta" id="claimFor"></p><label>Proof of ownership / details</label><textarea id="claimMsg" rows="4" required placeholder="Describe something only the owner would know"></textarea><div style="display:flex;gap:.5rem;margin-top:1rem"><button class="btn tag">Send claim</button><button type="button" class="btn ghost" onclick="$('#claimDlg').close()">Cancel</button></div></form></dialog>`)}
-let claimId=null;
-function openClaim(id){if(!me()){location.href='login.html';return}claimId=id;const it=DB.get('items',[]).find(i=>i.id===id);$('#claimFor').textContent=it.title+' - '+it.location;$('#claimMsg').value='';$('#claimDlg').showModal()}
-function submitClaim(e){e.preventDefault();const c=DB.get('claims',[]);c.push({id:uid(),itemId:claimId,by:me().email,msg:$('#claimMsg').value,status:'pending',date:day()});DB.set('claims',c);$('#claimDlg').close();toast('Claim sent. Admin will verify it.');return false}
+ <dialog id="claimDlg"><form onsubmit="return submitClaim(event)"><h3>Send claim request</h3><p class="meta" id="claimFor"></p><label>Proof of ownership / details</label><textarea id="claimMsg" rows="4" required placeholder="Describe something only the owner would know"></textarea><div style="display:flex;gap:.5rem;margin-top:1rem"><button class="btn tag">Send for admin verification</button><button type="button" class="btn ghost" onclick="$('#claimDlg').close()">Cancel</button></div></form></dialog>`)}
+let claimId=null, claimSourceItemId=null;
+function openClaim(id,sourceItemId=null,title='',locationName=''){
+ const u=me();
+ if(!u){toast('Please login to send a claim');setTimeout(()=>location.href='login.html',900);return}
+ claimId=Number(id);
+ claimSourceItemId=sourceItemId===null?null:Number(sourceItemId);
+ $('#claimFor').textContent=title&&locationName?`${title} - ${locationName}`:title||'Item claim';
+ $('#claimMsg').value='';
+ $('#claimDlg').showModal();
+}
+function openClaimFromButton(event,id,sourceItemId=null){
+ const button=event.currentTarget;
+ openClaim(id,sourceItemId,button.dataset.title,button.dataset.location);
+}
+function claimButton(item,sourceItemId=null){
+ const u=me();
+ if(sourceItemId===null&&u&&u.email.toLowerCase()===String(item.owner_email||item.owner||'').toLowerCase())return '';
+ const label=sourceItemId!==null?'Send match claim':item.type==='found'?'This is mine':'I found this';
+ return `<button class="btn sm tag" data-title="${esc(item.title)}" data-location="${esc(item.location)}" onclick="openClaimFromButton(event,${Number(item.id)},${sourceItemId===null?'null':Number(sourceItemId)})">${label}</button>`;
+}
+async function submitClaim(e){
+ e.preventDefault();
+ const u=me();
+ if(!u){toast('Please login to send a claim');location.href='login.html';return false}
+ const submit=e.submitter;
+ if(submit)submit.disabled=true;
+ try{
+  const r=await fetch(APP_API+'/claims',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({
+   itemId:claimId,sourceItemId:claimSourceItemId,by:u.email,msg:$('#claimMsg').value.trim()
+  })});
+  const d=await r.json();
+  if(!r.ok){toast(d.message||'Could not send claim');return false}
+  $('#claimDlg').close();
+  toast('Claim sent. Pending admin verification.');
+ }catch(error){toast('Cannot reach server. Is node server.js running?')}
+ finally{if(submit)submit.disabled=false}
+ return false;
+}
 function itemCard(i,claim=true){
  const u=me(),can=claim&&i.status==='approved'&&(!u||u.email!==i.owner);
  return `<div class="card"><div class="thumb" style="${i.img?`background-image:url(${i.img})`:''}">${i.img?'':ICON[i.category]||'📦'}</div><div class="body">
  <span class="badge b-${i.type}">${i.type==='lost'?'Lost':'Found'}</span> ${i.status!=='approved'?`<span class="badge s-${i.status}">${i.status}</span>`:''}
  <h3 style="margin-top:.4rem;font-size:1.1rem">${esc(i.title)}</h3><div class="meta">${esc(i.category)}, ${esc(i.color)}<br>${esc(i.location)} on ${i.date}</div>
- <p style="margin:0 0 .6rem;font-size:.92rem">${esc(i.desc)}</p>${can?`<button class="btn sm tag" onclick="openClaim('${i.id}')">${i.type==='found'?'This is mine':'I found this'}</button>`:''}</div></div>`}
+ <p style="margin:0 0 .6rem;font-size:.92rem">${esc(i.desc)}</p>${can?claimButton(i):''}</div></div>`}

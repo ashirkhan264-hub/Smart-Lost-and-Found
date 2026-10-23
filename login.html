@@ -6,83 +6,105 @@
     <title>Login - Smart Lost &amp; Found</title>
     <link rel="stylesheet" href="css/style.css">
   </head>
-  <body>
-    <main class="wrap" style="max-width: 460px">
-      <div class="tabs">
-        <button class="btn" id="t1" onclick="tab(1)">Login</button>
-        <button class="btn ghost" id="t2" onclick="tab(2)">Register</button>
-      </div>
-
-      <form class="box" id="f1" onsubmit="return login(event)">
-        <label>Email</label>
-        <input id="le" type="email" required>
-        <label>Password</label>
-        <input id="lp" type="password" required>
-        <p class="meta">
-          Demo: admin@campus.edu / admin123 &nbsp;|&nbsp; student@campus.edu /
-          user123
+  <body class="auth-page">
+    <main class="wrap auth-layout">
+      <section class="auth-intro">
+        <p class="eyebrow">Smart Lost &amp; Found</p>
+        <h1>Good things<br>find their way<br><span>back.</span></h1>
+        <p>
+          Sign in to report an item, keep an eye on possible matches and help
+          your campus community reconnect what matters.
         </p>
-        <button class="btn tag">Login</button>
-      </form>
+        <div class="auth-note">
+          <span aria-hidden="true">✦</span>
+          Every small detail can help reunite someone with their belongings.
+        </div>
+        <div class="auth-decoration" aria-hidden="true">
+          <span>🎒</span><span>🔑</span><span>📱</span>
+        </div>
+      </section>
 
-      <form class="box" id="f2" hidden onsubmit="return reg(event)">
-        <label>Full name</label>
-        <input id="rn" required>
-        <label>Email</label>
-        <input id="re" type="email" required>
-        <label>Password (min 6 characters)</label>
-        <input id="rp" type="password" minlength="6" required>
-        <button class="btn tag" style="margin-top: 1rem">
-          Create account
-        </button>
-      </form>
+      <section class="auth-card" aria-label="Account access">
+        <div class="auth-card-heading">
+          <p class="eyebrow">Welcome to the community</p>
+          <h2>Let’s get you started</h2>
+        </div>
+        <div class="tabs auth-tabs">
+          <button class="btn" id="t1" onclick="tab(1)">Login</button>
+          <button class="btn ghost" id="t2" onclick="tab(2)">Register</button>
+        </div>
+
+        <form id="f1" onsubmit="return login(event)">
+          <label for="le">Email</label>
+          <input id="le" type="email" autocomplete="email" placeholder="you@example.com" required>
+          <label for="lp">Password</label>
+          <input id="lp" type="password" autocomplete="current-password" placeholder="Enter your password" required>
+          <p class="meta auth-hint">Your account keeps your reports and matches together.</p>
+          <button class="btn tag auth-submit" type="submit">Login <span aria-hidden="true">→</span></button>
+        </form>
+
+        <form id="f2" hidden onsubmit="return reg(event)">
+          <label for="rn">Full name</label>
+          <input id="rn" autocomplete="name" placeholder="Your name" required>
+          <label for="re">Email</label>
+          <input id="re" type="email" autocomplete="email" placeholder="you@example.com" required>
+          <label for="rp">Password <span class="optional-label">(minimum 6 characters)</span></label>
+          <input id="rp" type="password" autocomplete="new-password" minlength="6" placeholder="Create a password" required>
+          <button class="btn tag auth-submit" type="submit">Create account <span aria-hidden="true">→</span></button>
+        </form>
+      </section>
     </main>
 
     <script src="js/app.js"></script>
     <script>
       layout('login.html');
+      const API = 'http://localhost:5000/api';
 
-      function tab(n) {
+      function tab(n){
         $('#f1').hidden = n !== 1;
         $('#f2').hidden = n !== 2;
         $('#t1').className = 'btn' + (n === 1 ? '' : ' ghost');
         $('#t2').className = 'btn' + (n === 2 ? '' : ' ghost');
       }
 
-      function login(e) {
+      async function send(path, body){
+        try {
+          const r = await fetch(API + path, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(body)
+          });
+          const d = await r.json();
+          if (!r.ok) { toast(d.message); return null; }
+          return d;
+        } catch (e) {
+         console.log('Login error:', e);
+  toast('Error: ' + e.message);
+  return null;
+        }
+      }
+
+      function saveSession(d){
+        DB.set('session', d.email);
+        const us = DB.get('users', []).filter(u => u.email !== d.email);
+        us.push({ name: d.name, email: d.email, pass: '', role: d.role, blocked: false });
+        DB.set('users', us);
+      }
+
+      async function login(e){
         e.preventDefault();
-        const u = DB.get('users', []).find(
-          (u) =>
-            u.email === $('#le').value.trim().toLowerCase() &&
-            u.pass === $('#lp').value,
-        );
-
-        if (!u) return toast('Wrong email or password'), false;
-        if (u.blocked) return toast('This account is blocked by admin'), false;
-
-        DB.set('session', u.email);
-        location.href = u.role === 'admin' ? 'admin.html' : 'index.html';
+        const d = await send('/login', { email: $('#le').value, password: $('#lp').value });
+        if (!d) return false;
+        saveSession(d);
+        location.href = d.role === 'admin' ? 'admin.html' : 'index.html';
         return false;
       }
 
-      function reg(e) {
+      async function reg(e){
         e.preventDefault();
-        const us = DB.get('users', []);
-        const em = $('#re').value.trim().toLowerCase();
-
-        if (us.some((u) => u.email === em)) {
-          return toast('Email already registered'), false;
-        }
-
-        us.push({
-          name: $('#rn').value.trim(),
-          email: em,
-          pass: $('#rp').value,
-          role: 'user',
-          blocked: false,
-        });
-        DB.set('users', us);
-        DB.set('session', em);
+        const d = await send('/register', { name: $('#rn').value, email: $('#re').value, password: $('#rp').value });
+        if (!d) return false;
+        saveSession(d);
         location.href = 'index.html';
         return false;
       }

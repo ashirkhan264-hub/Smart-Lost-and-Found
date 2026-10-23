@@ -3,54 +3,119 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta
+      name="description"
+      content="Find lost belongings and report found items on your campus."
+    >
+    <meta name="theme-color" content="#123e36">
     <title>Home - Smart Lost &amp; Found</title>
     <link rel="stylesheet" href="css/style.css">
   </head>
-  <body>
-    <main class="wrap">
+  <body class="home-page">
+    <main class="wrap home-shell">
       <section class="hero">
-        <h1>
-          Lost something on campus?<br>
-          Let the system find it.
-        </h1>
-        <p>
-          Report a lost or found item once. We compare category, colour,
-          description, location and date, and tell you when something looks like
-          yours.
-        </p>
-        <div class="row">
-          <a class="btn tag" href="report.html">Report an item</a>
-          <a class="btn ghost" href="search.html">Search items</a>
+        <div class="hero-copy">
+          <p class="eyebrow">A little help goes a long way</p>
+          <h1>Lost something?<br><span>Let’s bring it back.</span></h1>
+          <p>
+            One campus community, one simple place to report lost belongings,
+            find recent items and reconnect them with their owners.
+          </p>
+          <div class="hero-actions">
+            <a class="btn tag" href="report.html">＋ Report an item</a>
+            <a class="btn ghost" href="search.html">Browse found items <span aria-hidden="true">→</span></a>
+          </div>
+          <div class="hero-trust">
+            <span aria-hidden="true">✦</span>
+            Your campus community is here to help.
+          </div>
+        </div>
+        <div class="hero-art" aria-hidden="true">
+          <div class="hero-orbit hero-orbit-one"></div>
+          <div class="hero-orbit hero-orbit-two"></div>
+          <div class="hero-search-icon">⌕</div>
+          <div class="hero-item hero-item-phone">📱</div>
+          <div class="hero-item hero-item-keys">🔑</div>
+          <div class="hero-item hero-item-bag">🎒</div>
+          <div class="hero-found-card">
+            <span class="hero-found-icon">✓</span>
+            <span><strong>Found together</strong><small>Good things come back.</small></span>
+          </div>
         </div>
       </section>
 
-      <div class="stats" id="stats"></div>
-      <h2>Recently reported</h2>
-      <div class="grid" id="recent"></div>
+      <section class="home-stats" aria-label="Community activity">
+        <div class="section-kicker"><span class="status-dot"></span> Our community at a glance</div>
+        <div class="stats" id="stats"></div>
+      </section>
+
+      <section class="home-process" aria-labelledby="process-title">
+        <div class="home-process-heading">
+          <p class="eyebrow">Simple from start to finish</p>
+          <h2 id="process-title">A little effort can bring a lot back.</h2>
+          <p class="section-description">
+            Three small steps help your campus community reunite people with their things.
+          </p>
+        </div>
+        <div class="home-process-grid">
+          <article class="process-card">
+            <span class="process-number" aria-hidden="true">01</span>
+            <span class="process-icon" aria-hidden="true">📝</span>
+            <h3>Tell the community</h3>
+            <p>Share a few details about what you lost or found so people know what to look for.</p>
+          </article>
+          <article class="process-card">
+            <span class="process-number" aria-hidden="true">02</span>
+            <span class="process-icon" aria-hidden="true">✨</span>
+            <h3>Discover a match</h3>
+            <p>Browse recent reports or check your matches for items with details in common.</p>
+          </article>
+          <article class="process-card">
+            <span class="process-number" aria-hidden="true">03</span>
+            <span class="process-icon" aria-hidden="true">🤝</span>
+            <h3>Make it home</h3>
+            <p>Send a claim for admin verification and help an item find its way back.</p>
+          </article>
+        </div>
+      </section>
+
+      <section class="home-recent">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">The latest updates</p>
+            <h2>Recently reported</h2>
+            <p class="section-description">A few things recently reported by your campus community.</p>
+          </div>
+          <a class="btn ghost" href="search.html">Explore all items <span aria-hidden="true">→</span></a>
+        </div>
+        <div class="grid" id="recent"><div class="empty">Loading...</div></div>
+      </section>
+
+      <section class="home-cta" aria-labelledby="home-cta-title">
+        <div class="home-cta-mark" aria-hidden="true">✦</div>
+        <div>
+          <p class="eyebrow">Every report makes a difference</p>
+          <h2 id="home-cta-title">Your next small step could mean a lot to someone.</h2>
+          <p>Report a lost or found item and let your campus community help.</p>
+        </div>
+        <a class="btn tag" href="report.html">Get started <span aria-hidden="true">→</span></a>
+      </section>
     </main>
-
-    <script src="js/app.js"></script>
-    <script>
-      layout('index.html');
-
-      const it = DB.get('items', []);
-      const ok = it.filter((i) => i.status === 'approved');
-
-      $('#stats').innerHTML = [
-        ['Lost reports', it.filter((i) => i.type === 'lost').length],
-        ['Found reports', it.filter((i) => i.type === 'found').length],
-        ['Returned', it.filter((i) => i.status === 'returned').length],
-        ['Users', DB.get('users', []).length],
-      ]
-        .map((s) => `<div class="stat"><b>${s[1]}</b>${s[0]}</div>`)
-        .join('');
-
-      $('#recent').innerHTML =
-        ok
-          .slice(-6)
-          .reverse()
-          .map((i) => itemCard(i))
-          .join('') || '<div class="empty">No approved reports yet.</div>';
-    </script>
+<script src="js/app.js"></script>
+<script>
+const API='http://localhost:5000/api';
+layout('index.html');
+const ICONS={'Electronics':'📱','Bags':'🎒','Wallet/Cards':'👛','Keys':'🔑','Clothing':'🧥','Books/Stationery':'📚','Other':'📦'};
+async function load(){
+  try{
+    const [s,it]=await Promise.all([fetch(API+'/stats').then(r=>r.json()),fetch(API+'/items').then(r=>r.json())]);
+    $('#stats').innerHTML=[['Lost reports',s.lost],['Found reports',s.found],['Returned',s.returned],['Users',s.users]].map(x=>`<div class="stat"><b>${x[1]}</b>${x[0]}</div>`).join('');
+    $('#recent').innerHTML=it.slice(0,6).map(i=>{
+      const img=i.image?`<div class="thumb" style="background-image:url(${i.image})"></div>`:`<div class="thumb">${ICONS[i.category]||'📦'}</div>`;
+      return `<div class="card">${img}<div class="body"><span class="badge b-${i.type}">${i.type==='lost'?'Lost':'Found'}</span><h3 style="margin-top:.4rem;font-size:1.1rem">${esc(i.title)}</h3><div class="meta">${esc(i.category)}, ${esc(i.color)}<br>${esc(i.location)}, ${String(i.item_date).slice(0,10)}</div><p style="margin:.6rem 0;font-size:.92rem">${esc(i.description)}</p>${claimButton(i)}</div></div>`}).join('')||'<div class="empty">No approved reports yet.</div>';
+  }catch(e){$('#stats').innerHTML='';$('#recent').innerHTML='<div class="empty">Cannot reach server. Is node server.js running?</div>'}
+}
+load();
+</script>
   </body>
 </html>
