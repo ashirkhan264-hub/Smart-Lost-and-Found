@@ -30,7 +30,7 @@ function layout(active){
  const L=[['index.html','Home'],['search.html','Search items'],['report.html','Report item'],['matches.html','My matches'],['my-reports.html','My reports']];
  if(u&&u.role==='admin')L.push(['admin.html','Admin']);
  document.body.insertAdjacentHTML('afterbegin',`<nav><div class="wrap"><b>🔎 Smart Lost &amp; Found</b>${L.map(l=>`<a href="${l[0]}" class="${l[0]===active?'on':''}">${l[1]}</a>`).join('')}${u?`<a href="#" onclick="logout()">Logout (${esc(u.name.split(' ')[0])})</a>`:'<a href="login.html">Login</a>'}</div></nav><div id="toast"></div>
- <dialog id="claimDlg"><form onsubmit="return submitClaim(event)"><h3>Send claim request</h3><p class="meta" id="claimFor"></p><label>Proof of ownership / details</label><textarea id="claimMsg" rows="4" required placeholder="Describe something only the owner would know"></textarea><div style="display:flex;gap:.5rem;margin-top:1rem"><button class="btn tag">Send for admin verification</button><button type="button" class="btn ghost" onclick="$('#claimDlg').close()">Cancel</button></div></form></dialog>`)}
+ <dialog id="claimDlg"><form onsubmit="return submitClaim(event)"><h3>Send claim request</h3><p class="meta" id="claimFor"></p><label>Proof of ownership / details</label><textarea id="claimMsg" rows="4" required placeholder="Describe something only the owner would know"></textarea><p id="claimError" class="claim-error" role="alert" hidden></p><div style="display:flex;gap:.5rem;margin-top:1rem"><button id="claimSubmit" class="btn tag">Send for admin verification</button><button id="claimCancel" type="button" class="btn ghost" onclick="$('#claimDlg').close()">Cancel</button></div></form></dialog>`)}
 let claimId=null, claimSourceItemId=null;
 function openClaim(id,sourceItemId=null,title='',locationName=''){
  const u=me();
@@ -39,6 +39,8 @@ function openClaim(id,sourceItemId=null,title='',locationName=''){
  claimSourceItemId=sourceItemId===null?null:Number(sourceItemId);
  $('#claimFor').textContent=title&&locationName?`${title} - ${locationName}`:title||'Item claim';
  $('#claimMsg').value='';
+ $('#claimError').hidden=true;
+ $('#claimError').textContent='';
  $('#claimDlg').showModal();
 }
 function openClaimFromButton(event,id,sourceItemId=null){
@@ -55,18 +57,37 @@ async function submitClaim(e){
  e.preventDefault();
  const u=me();
  if(!u){toast('Please login to send a claim');location.href='login.html';return false}
- const submit=e.submitter;
- if(submit)submit.disabled=true;
+ const submit=$('#claimSubmit');
+ const cancel=$('#claimCancel');
+ const errorBox=$('#claimError');
+ submit.disabled=true;
+ cancel.disabled=true;
+ submit.textContent='Sending...';
+ errorBox.hidden=true;
+ errorBox.textContent='';
  try{
   const r=await fetch(APP_API+'/claims',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({
    itemId:claimId,sourceItemId:claimSourceItemId,by:u.email,msg:$('#claimMsg').value.trim()
   })});
-  const d=await r.json();
-  if(!r.ok){toast(d.message||'Could not send claim');return false}
+  const d=await r.json().catch(()=>({}));
+  if(!r.ok){
+   const message=d.message||'Could not send claim. Please try again.';
+   errorBox.textContent=message.includes('A match claim must link your own lost report to your own found report')
+    ? 'The API server is outdated. Stop it with Ctrl+C, run "npm start" again, then retry.'
+    : message;
+   errorBox.hidden=false;
+   return false;
+  }
   $('#claimDlg').close();
   toast('Claim sent. Pending admin verification.');
- }catch(error){toast('Cannot reach server. Is node server.js running?')}
- finally{if(submit)submit.disabled=false}
+ }catch(error){
+  errorBox.textContent='Could not reach the server. Check that the API is running, then try again.';
+  errorBox.hidden=false;
+ }finally{
+  submit.disabled=false;
+  cancel.disabled=false;
+  submit.textContent='Send for admin verification';
+ }
  return false;
 }
 function itemCard(i,claim=true){

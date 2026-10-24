@@ -350,8 +350,8 @@ app.post('/api/claims', async (req, res) => {
           !['pending', 'approved'].includes(source.status) ||
           !['pending', 'approved'].includes(target.status) ||
           source.owner_email.toLowerCase() !== by ||
-          target.owner_email.toLowerCase() !== by) {
-        return res.status(400).json({ message: 'A match claim must link your own lost report to your own found report' });
+          (target.owner_email.toLowerCase() !== by && target.status !== 'approved')) {
+        return res.status(400).json({ message: 'A match claim must link your own lost report to an available found report' });
       }
       if (matchScore(source, target) < 40) {
         return res.status(400).json({ message: 'These reports do not meet the match threshold' });
@@ -442,7 +442,9 @@ app.put('/api/admin/claims/:id', requireAdmin, async (req, res) => {
           (claim.source_item_id !== null &&
            (!['pending', 'approved'].includes(claim.source_status) || claim.source_type !== 'lost' ||
             claim.item_type !== 'found' || claim.source_owner.toLowerCase() !== claim.claimed_by.toLowerCase() ||
-            claim.item_owner.toLowerCase() !== claim.claimed_by.toLowerCase()))) {
+            (claim.item_owner.toLowerCase() === claim.claimed_by.toLowerCase()
+              ? !['pending', 'approved'].includes(claim.item_status)
+              : claim.item_status !== 'approved')))) {
         await transaction.rollback();
         return res.status(409).json({ message: 'The report or its match is no longer available' });
       }

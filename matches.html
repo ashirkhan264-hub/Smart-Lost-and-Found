@@ -98,7 +98,10 @@
                               Send a claim to the admin. This report stays visible
                               until the claim is approved.
                             </p>
-                            ${claimButton(other)}`
+                            ${claimButton(
+                              other,
+                              mine.type === 'lost' && other.type === 'found' ? mine.id : null,
+                            )}`
                       }
                     </div>
                   </article>

@@ -1103,6 +1103,12 @@ dialog form>div{
  gap:.5rem;
  margin-top:1rem;
 }
+.claim-error{
+ margin:.75rem 0 0;
+ color:#a32626;
+ font-size:.9rem;
+ font-weight:600;
+}
 #toast{
  bottom:1.25rem;
  border:1px solid rgba(255,255,255,.12);

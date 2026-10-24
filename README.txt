@@ -22,7 +22,8 @@ variable to use another port. Keep the API running while using the frontend.
 The login page and API require a SQL Server connection.
 
 On My Matches, approved lost/found reports are compared by their details.
-Submitting a claim leaves the reports visible for admin review. When an admin
-approves a linked Lost/Found match claim, both reports are marked returned and
-removed from active listings. Item cards on Home and Search use the same claim
-request flow.
+Claiming a found report from a match links it to your lost report. Submitting a
+claim leaves the reports visible for admin review. When an admin approves a
+linked Lost/Found match claim, both reports are marked returned and removed
+from active listings. Item cards on Home and Search use the same claim request
+flow.
