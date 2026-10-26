@@ -9,6 +9,7 @@
     >
     <title>Report an item - Smart Lost &amp; Found</title>
     <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/theme.css">
   </head>
   <body>
     <main class="wrap page-shell">
@@ -69,13 +70,13 @@
                 role="group"
                 aria-labelledby="category-label"
               >
-                <button class="report-chip is-selected" type="button" data-v="Electronics" aria-pressed="true">📱 Electronics</button>
-                <button class="report-chip" type="button" data-v="Bags" aria-pressed="false">🎒 Bags</button>
-                <button class="report-chip" type="button" data-v="Wallet/Cards" aria-pressed="false">👛 Wallet/Cards</button>
-                <button class="report-chip" type="button" data-v="Keys" aria-pressed="false">🔑 Keys</button>
-                <button class="report-chip" type="button" data-v="Clothing" aria-pressed="false">🧥 Clothing</button>
-                <button class="report-chip" type="button" data-v="Books/Stationery" aria-pressed="false">📚 Books</button>
-                <button class="report-chip" type="button" data-v="Other" aria-pressed="false">📦 Other</button>
+                <button class="report-chip is-selected" type="button" data-v="Electronics" aria-pressed="true"><svg class="category-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="7" y="2.5" width="10" height="19" rx="2"/><path d="M10 5h4M11 18.5h2"/></svg> Electronics</button>
+                <button class="report-chip" type="button" data-v="Bags" aria-pressed="false"><svg class="category-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 8h12l1 13H5L6 8Z"/><path d="M9 8V6a3 3 0 0 1 6 0v2M8 13h8v4H8z"/></svg> Bags</button>
+                <button class="report-chip" type="button" data-v="Wallet/Cards" aria-pressed="false"><svg class="category-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="6" width="18" height="14" rx="2"/><path d="M3 9h18M16 14h2"/></svg> Wallet/Cards</button>
+                <button class="report-chip" type="button" data-v="Keys" aria-pressed="false"><svg class="category-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="8" cy="9" r="4"/><path d="m11 12 8 8m-3-3 2-2m-5-1 2-2"/></svg> Keys</button>
+                <button class="report-chip" type="button" data-v="Clothing" aria-pressed="false"><svg class="category-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m8 4 4 2 4-2 5 4-3 3-2-2v12H8V9l-2 2-3-3 5-4Z"/></svg> Clothing</button>
+                <button class="report-chip" type="button" data-v="Books/Stationery" aria-pressed="false"><svg class="category-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 4h7a3 3 0 0 1 3 3v13a3 3 0 0 0-3-3H4z"/><path d="M20 4h-3a3 3 0 0 0-3 3v13a3 3 0 0 1 3-3h3z"/></svg> Books</button>
+                <button class="report-chip" type="button" data-v="Other" aria-pressed="false"><svg class="category-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m3 7 9-4 9 4-9 4-9-4Z"/><path d="M3 7v10l9 4 9-4V7M12 11v10"/></svg> Other</button>
               </div>
             </div>
 
@@ -170,7 +171,7 @@
             </div>
 
             <label class="report-upload" for="img">
-              <span class="report-upload-icon" aria-hidden="true">↑</span>
+              <span class="report-upload-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4m-5 5 5-5 5 5M4 16v4h16v-4"/></svg></span>
               <span class="report-upload-copy">
                 <strong>Choose a photo</strong>
                 <span>JPG or PNG, up to 5 MB</span>
@@ -244,7 +245,7 @@
             </div>
 
             <article class="card report-preview-card">
-              <div class="thumb report-preview-thumb" id="pthumb" aria-hidden="true">📱</div>
+              <div class="thumb report-preview-thumb" id="pthumb" aria-hidden="true"><svg class="category-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="7" y="2.5" width="10" height="19" rx="2"/><path d="M10 5h4M11 18.5h2"/></svg></div>
               <div class="body">
                 <span class="badge b-lost" id="pbadge">Lost</span>
                 <h3 id="ptitle">Your item name</h3>
@@ -267,7 +268,7 @@
           </section>
 
           <p class="report-privacy-note">
-            <span aria-hidden="true">🔒</span>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3m-4 4v3"/></svg>
             Your report is reviewed before it becomes visible to others.
           </p>
         </aside>
@@ -284,16 +285,6 @@
       let color = 'Black';
       let imgData = '';
 
-      const ICONS = {
-        Electronics: '📱',
-        Bags: '🎒',
-        'Wallet/Cards': '👛',
-        Keys: '🔑',
-        Clothing: '🧥',
-        'Books/Stationery': '📚',
-        Other: '📦',
-      };
-
       $('#date').value = day();
       $('#date').max = day();
 
@@ -306,7 +297,7 @@
         $('#pmeta').innerHTML = `${category} · ${color}<br>${$('#loc').value}`;
 
         if (!imgData) {
-          $('#pthumb').textContent = ICONS[category] || '📦';
+          $('#pthumb').innerHTML = iconFor(category);
         }
       }
 

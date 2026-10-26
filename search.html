@@ -7,6 +7,7 @@
     <title>Search items - Smart Lost &amp; Found</title>
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="css/search-page.css">
+    <link rel="stylesheet" href="css/theme.css">
   </head>
   <body class="search-page">
     <main class="wrap search-shell">
@@ -19,7 +20,7 @@
       <section class="search-panel" aria-label="Search and filters">
         <form class="search-form" onsubmit="return doSearch(event)">
           <label class="visually-hidden" for="q">Search by item name or details</label>
-          <span class="search-icon" aria-hidden="true">⌕</span>
+          <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="10.8" cy="10.8" r="6.8"/><path d="m16 16 5 5"/></svg>
           <input
             id="q"
             type="search"
@@ -118,7 +119,6 @@
 
       const SEARCH_CATEGORIES = CATS;
       const COLS = [['Black', '#171c19'], ['White', '#fff'], ['Grey', '#888'], ['Blue', '#3268c8'], ['Red', '#cf4a43'], ['Green', '#43845d'], ['Yellow', '#e5b62d'], ['Brown', '#795333']];
-      const ICONS = { Electronics: '📱', Bags: '🎒', 'Wallet/Cards': '👛', Keys: '🔑', Clothing: '🧥', 'Books/Stationery': '📚', Other: '📦' };
       const PER_PAGE = 9;
       let ALL = [];
       let page = 1;
@@ -222,7 +222,7 @@
         const ownReport = user && user.email.toLowerCase() === item.owner_email.toLowerCase();
         const image = item.image
           ? `<div class="thumb search-thumb" style="background-image:url('${esc(item.image)}')" role="img" aria-label="${esc(item.title)}"></div>`
-          : `<div class="thumb search-thumb search-thumb-placeholder" aria-hidden="true">${ICONS[item.category] || ICONS.Other}</div>`;
+          : `<div class="thumb search-thumb search-thumb-placeholder" aria-hidden="true">${iconFor(item.category)}</div>`;
         return `<article class="card search-card">
           ${image}
           <div class="body search-card-body">

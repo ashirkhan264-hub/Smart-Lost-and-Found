@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>My Matches - Smart Lost &amp; Found</title>
     <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/theme.css">
   </head>
   <body>
     <main class="wrap page-shell">
@@ -61,9 +62,10 @@
             );
           }
           $('#summary').innerHTML = `
-            <div class="stat"><b>${suggestions.length}</b>Possible matches</div>
-            <div class="stat"><b>40%</b>Minimum score</div>
+            <div class="stat"><b data-count="${suggestions.length}">0</b>Possible matches</div>
+            <div class="stat"><b data-count="40">0</b>% Minimum score</div>
           `;
+          animateCounts($('#summary'));
           $('#list').innerHTML =
             suggestions
               .map(
@@ -78,7 +80,7 @@
                         <p class="eyebrow">Your report</p>
                         ${itemCard(mine, false)}
                       </div>
-                      <div class="score" aria-label="${s} percent match">
+                      <div class="score" style="--score-target:${Math.max(0, Math.min(100, Number(s) || 0))}%" aria-label="${s} percent match">
                         ${s}%<small>match score</small>
                       </div>
                       <div class="match-item">
@@ -109,7 +111,7 @@
               )
               .join('') ||
             `<div class="empty-state">
-              <div class="empty-icon" aria-hidden="true">⌕</div>
+              <svg class="empty-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><circle cx="10.8" cy="10.8" r="6.8"/><path d="m16 16 5 5"/></svg>
               <h2>No possible matches yet</h2>
               <p>
                 Matches appear when the reports have enough details in common.

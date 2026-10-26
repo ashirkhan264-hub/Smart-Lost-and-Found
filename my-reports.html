@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>My reports - Smart Lost & Found</title><link rel="stylesheet" href="css/style.css"><link rel="stylesheet" href="css/pages.css"></head><body>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>My reports - Smart Lost & Found</title><link rel="stylesheet" href="css/style.css"><link rel="stylesheet" href="css/pages.css"><link rel="stylesheet" href="css/theme.css"></head><body>
 <main class="wrap"><div class="pagehead"><div class="crumb">Home / My reports</div><h1>My reports</h1><p>Track everything you reported.</p></div>
 <div class="stats"><div class="stat"><b id="sTotal">0</b>Total reports</div><div class="stat"><b id="sPend">0</b>Waiting for verification</div><div class="stat"><b id="sAppr">0</b>Visible in search</div><div class="stat"><b id="sRet">0</b>Returned</div></div>
 <div class="two"><section><div class="tabs2" id="tabs"></div><div id="list"><div class="empty">Loading...</div></div></section>
@@ -8,7 +8,6 @@
 const API='http://localhost:5000/api';
 layout('my-reports.html');
 const user=need();
-const ICONS={'Electronics':'📱','Bags':'🎒','Wallet/Cards':'👛','Keys':'🔑','Clothing':'🧥','Books/Stationery':'📚','Other':'📦'};
 let ALL=[], tab='all';
 const TABS=[['all','All'],['lost','Lost'],['found','Found'],['pending','Pending'],['returned','Returned']];
 async function load(){
@@ -21,15 +20,15 @@ async function load(){
 async function loadClaims(){
   try{
     const r=await fetch(API+'/my-claims?email='+encodeURIComponent(user.email)); const c=await r.json();
-    $('#claims').innerHTML=c.map(x=>`<div class="claim"><span style="font-size:1.6rem">${ICONS[x.category]||'📦'}</span><div style="flex:1"><b>${esc(x.title)}</b>${x.source_title?`<div class="meta" style="margin:0">Matched with your ${esc(x.source_type)} report: ${esc(x.source_title)}</div>`:''}<div class="meta" style="margin:0">Sent ${String(x.created_at).slice(0,10)}</div></div><span class="badge s-${x.status}">${x.status}</span></div>`).join('')||'<div class="meta">No claims yet. Use the claim button on an item or match.</div>';
+    $('#claims').innerHTML=c.map(x=>`<div class="claim"><span class="claim-icon">${iconFor(x.category)}</span><div style="flex:1"><b>${esc(x.title)}</b>${x.source_title?`<div class="meta" style="margin:0">Matched with your ${esc(x.source_type)} report: ${esc(x.source_title)}</div>`:''}<div class="meta" style="margin:0">Sent ${String(x.created_at).slice(0,10)}</div></div><span class="badge s-${x.status}">${x.status}</span></div>`).join('')||'<div class="meta">No claims yet. Use the claim button on an item or match.</div>';
   }catch(e){$('#claims').innerHTML='<div class="meta">Could not load claims</div>'}
 }
 function match(i,t){return t==='all'||i.type===t||i.status===t}
 function render(){
-  $('#sTotal').textContent=ALL.length;
-  $('#sPend').textContent=ALL.filter(i=>i.status==='pending').length;
-  $('#sAppr').textContent=ALL.filter(i=>i.status==='approved').length;
-  $('#sRet').textContent=ALL.filter(i=>i.status==='returned').length;
+  animateCount($('#sTotal'),ALL.length);
+  animateCount($('#sPend'),ALL.filter(i=>i.status==='pending').length);
+  animateCount($('#sAppr'),ALL.filter(i=>i.status==='approved').length);
+  animateCount($('#sRet'),ALL.filter(i=>i.status==='returned').length);
   $('#tabs').innerHTML=TABS.map(t=>`<a href="#" class="${tab===t[0]?'on':''}" onclick="tab='${t[0]}';render();return false">${t[1]} (${ALL.filter(i=>match(i,t[0])).length})</a>`).join('');
   const r=ALL.filter(i=>match(i,tab));
   $('#list').innerHTML=r.map(row).join('')||'<div class="empty">Nothing here yet. <a href="report.html">Report an item</a>.</div>';
@@ -37,7 +36,7 @@ function render(){
 function row(i){
   const done={pending:1,approved:2,returned:4,rejected:1}[i.status]||1;
   const steps=['Submitted','Verified','Matched','Returned'].map((l,k)=>`<i class="${k<done?'d':''}">${l}</i>`).join('');
-  const th=i.image?`<div class="th" style="background:url(${i.image}) center/cover"></div>`:`<div class="th">${ICONS[i.category]||'📦'}</div>`;
+  const th=i.image?`<div class="th" style="background:url(${i.image}) center/cover"></div>`:`<div class="th">${iconFor(i.category)}</div>`;
   return `<div class="row">${th}<div><h3>${esc(i.title)}</h3><div class="meta" style="margin:0">${i.type==='lost'?'Lost':'Found'}, ${esc(i.location)}, ${String(i.item_date).slice(0,10)}</div><div class="steps">${steps}</div></div>
   <div class="ra"><span class="badge s-${i.status}">${i.status}</span>${i.status==='pending'?`<button class="btn sm red" onclick="del(${i.id})">Delete</button>`:''}</div></div>`;
 }

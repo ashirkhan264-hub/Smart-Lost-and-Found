@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Admin - Smart Lost & Found</title><link rel="stylesheet" href="css/style.css"><link rel="stylesheet" href="css/pages.css"></head><body>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Admin - Smart Lost & Found</title><link rel="stylesheet" href="css/style.css"><link rel="stylesheet" href="css/pages.css"><link rel="stylesheet" href="css/theme.css"></head><body>
 <main class="wrap"><div class="pagehead"><div class="crumb">Home / Admin</div><h1>Admin dashboard</h1><p>Verify reports, manage users and see statistics.</p></div>
 <div class="tabs" id="tabs"></div><div id="view"><div class="empty">Loading...</div></div></main>
 <script src="js/app.js"></script>
@@ -33,9 +33,10 @@ function draw(){
   const v=$('#view');
   if(T==='stats'&&STATS){
     const s=STATS,t=Math.max(1,s.lost+s.found),mx=Math.max(1,...s.categories.map(c=>c.n));
-    v.innerHTML=`<div class="stats">${[['Total reports',s.total],['Pending verification',s.pending],['Visible in search',s.approved],['Returned',s.returned],['Users',s.users]].map(x=>`<div class="stat"><b>${x[1]}</b>${x[0]}</div>`).join('')}</div>
+    v.innerHTML=`<div class="stats">${[['Total reports',s.total],['Pending verification',s.pending],['Visible in search',s.approved],['Returned',s.returned],['Users',s.users]].map(x=>`<div class="stat"><b data-count="${Number(x[1])||0}">0</b>${x[0]}</div>`).join('')}</div>
     <div class="cols"><div class="box"><h3>Reports by category</h3>${s.categories.map(c=>`<div>${esc(c.category)} (${c.n})<div class="bar" style="width:${c.n/mx*100}%"></div></div>`).join('')||'<div class="empty">No data yet</div>'}</div>
     <div class="box"><h3>Lost vs found</h3><div class="donut" style="background:conic-gradient(var(--lost) 0 ${s.lost/t*100}%,var(--found) ${s.lost/t*100}% 100%)"></div><p class="meta" style="text-align:center">Lost ${s.lost} (red) | Found ${s.found} (teal)</p></div></div>`;
+    animateCounts(v);
   }
   if(T==='reports'){
     const list=ITEMS.filter(i=>FILTER==='all'||i.status===FILTER);

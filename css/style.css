@@ -1,4 +1,3 @@
-@import url('https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@400;600;800&display=swap');
 :root{--bg:#f1f4f7;--card:#fff;--ink:#14213d;--mut:#5b6678;--line:#dde3ea;--lost:#e4572e;--found:#0f8b8d;--tag:#ffc93c;--r:10px}
 @media(prefers-color-scheme:dark){:root{--bg:#0d1420;--card:#16202f;--ink:#eef2f7;--mut:#9aa7ba;--line:#26334a}}
 *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.55 'Bricolage Grotesque',system-ui,sans-serif}
